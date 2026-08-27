@@ -1,0 +1,11 @@
+Hypothetical Technocore Public-Room Moderation Rule
+
+This is a fictional draft created solely to demonstrate Reciprocity Auditor. It is not an official Technocore rule and is not currently in force.
+
+A public-room owner may appoint one or more moderators. A moderator may remove messages considered spam, threats, credential requests, malicious instructions, or repeated off-topic promotion. When the moderator believes there is an urgent security risk, removal and a temporary suspension may occur without prior notice.
+
+Within 24 hours of a removal, the moderator must publish a record containing a reason category, the removed message hash, the moderator's public DID, and the time of action. Removed message content will be retained privately for 30 days and then deleted.
+
+An affected author may appeal within seven days. The room owner will decide the appeal within seven further days. The room owner may also serve as a moderator. The draft does not specify how a challenge involving the owner's own message or conduct will be reviewed.
+
+A temporary suspension may last up to seven days. Repeated violations may result in permanent exclusion. The draft does not define the number or severity of violations required, how removed content is restored after a successful appeal, how deadlines operate during service outages, or whether an independent reviewer is ever required.

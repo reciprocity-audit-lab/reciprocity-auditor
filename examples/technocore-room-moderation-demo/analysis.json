@@ -1,0 +1,978 @@
+{
+  "audit_metadata": {
+    "report_id": "technocore-room-moderation-demo",
+    "schema_version": "0.1.0",
+    "source_title": "Hypothetical Technocore Public-Room Moderation Rule",
+    "source_version": null,
+    "scope": "架空の公開ルームにおけるモデレーション、記録、保存、異議申立ておよび排除手続",
+    "generated_at": null
+  },
+  "proposal_summary": {
+    "summary": "公開ルーム所有者がモデレーターを任命し、所定の問題投稿を削除できる架空のルール案。緊急時には事前通知なしの削除・一時停止を認め、24時間以内の公開記録、30日間の非公開保存、投稿者による異議申立て、所有者による判断を定める。一方、所有者自身が関係する事案、永久排除の基準、復旧、障害時の期限、独立審査は未定義である。",
+    "stated_purpose": "Reciprocity Auditorのデモとして、公開ルームの安全対応と手続的保護を検討すること",
+    "scope": "架空のTechnocore公開ルームにおける投稿削除、一時停止、永久排除、記録、保存および異議申立て",
+    "source_status": "complete"
+  },
+  "actors": [
+    {
+      "id": "room_owner",
+      "name": "公開ルーム所有者",
+      "roles": [
+        "モデレーター任命者",
+        "異議申立て決定者",
+        "モデレーターを兼任し得る者"
+      ],
+      "party_status": "overseer",
+      "consent_mechanism": null,
+      "exit_mechanism": null,
+      "evidence_refs": [
+        {
+          "location": "提案第2・4段落",
+          "quote_or_paraphrase": "所有者はモデレーターを任命し、異議申立てを判断し、自らモデレーターを兼ねることができる。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "id": "moderator",
+      "name": "モデレーター",
+      "roles": [
+        "投稿削除者",
+        "一時停止実施者",
+        "措置記録作成者"
+      ],
+      "party_status": "enforcer",
+      "consent_mechanism": "公開ルーム所有者による任命",
+      "exit_mechanism": null,
+      "evidence_refs": [
+        {
+          "location": "提案第2・3段落",
+          "quote_or_paraphrase": "モデレーターは所定の投稿を削除し、緊急時に一時停止を行い、24時間以内に記録を公開する。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "id": "affected_author",
+      "name": "措置対象となる投稿者",
+      "roles": [
+        "投稿者",
+        "削除・停止・排除の対象者",
+        "異議申立て適格者"
+      ],
+      "party_status": "obligated_party",
+      "consent_mechanism": null,
+      "exit_mechanism": null,
+      "evidence_refs": [
+        {
+          "location": "提案第4・5段落",
+          "quote_or_paraphrase": "影響を受けた投稿者は7日以内に異議申立てができ、違反の反復により永久排除の対象となり得る。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "id": "room_participants",
+      "name": "その他のルーム参加者・閲覧者",
+      "roles": [
+        "投稿・閲覧を行う者",
+        "安全対応の受益者となり得る者"
+      ],
+      "party_status": "beneficiary",
+      "consent_mechanism": null,
+      "exit_mechanism": null,
+      "evidence_refs": [
+        {
+          "location": "提案第2段落",
+          "quote_or_paraphrase": "スパム、脅威、資格情報要求、悪意ある指示、反復的宣伝が削除対象として挙げられている。",
+          "status": "inferred"
+        }
+      ]
+    }
+  ],
+  "affected_non_parties": [
+    {
+      "name": "削除対象メッセージ内で言及される第三者",
+      "impact_path": "削除された本文が30日間非公開で保存されることを通じて影響を受け得る。",
+      "impact": "第三者に関する情報が誰により、どの安全措置で保存・閲覧されるかが定義されていない。",
+      "status": "possible",
+      "questions": [
+        "保存対象に第三者の個人情報や資格情報が含まれる場合、アクセスと削除はどのように扱うか。",
+        "異議申立てに不要な情報を最小化または秘匿する手順はあるか。"
+      ]
+    },
+    {
+      "name": "将来ルームへ参加する者",
+      "impact_path": "過去の判断基準と記録の一貫性が、将来の発言可能性や予測可能性に影響する。",
+      "impact": "基準と先例の公開範囲が不明なため、許容される行為を事前に予測しにくい可能性がある。",
+      "status": "possible",
+      "questions": [
+        "理由カテゴリと判断例は将来の参加者が確認できる形で整理されるか。"
+      ]
+    }
+  ],
+  "rights": [
+    {
+      "actor_id": "moderator",
+      "description": "所定のカテゴリに該当すると判断した投稿を削除する権限",
+      "counterparty_ids": [
+        "affected_author",
+        "room_participants"
+      ],
+      "conditions": "スパム、脅威、資格情報要求、悪意ある指示、反復的な無関係宣伝と判断した場合",
+      "duration": null,
+      "reciprocal_item": "24時間以内の措置記録公開と異議申立てへの対応",
+      "evidence_refs": [
+        {
+          "location": "提案第2・3段落",
+          "quote_or_paraphrase": "モデレーターは列挙された種類の投稿を削除でき、24時間以内に理由カテゴリ等を公開する。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "moderator",
+      "description": "緊急の安全上の危険があると判断した場合に、事前通知なしで削除と一時停止を行う権限",
+      "counterparty_ids": [
+        "affected_author"
+      ],
+      "conditions": "モデレーターが緊急の安全上の危険があると判断した場合",
+      "duration": "一時停止は最長7日",
+      "reciprocal_item": "事後の公開記録と異議申立て",
+      "evidence_refs": [
+        {
+          "location": "提案第2・5段落",
+          "quote_or_paraphrase": "緊急時には事前通知なしで削除・一時停止ができ、一時停止は最長7日である。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "affected_author",
+      "description": "措置に対して異議を申し立てる権利",
+      "counterparty_ids": [
+        "room_owner"
+      ],
+      "conditions": "影響を受けた投稿者が措置後7日以内に申し立てること",
+      "duration": "申立期間7日、所有者の判断期間はさらに7日",
+      "reciprocal_item": "所有者による異議申立て判断",
+      "evidence_refs": [
+        {
+          "location": "提案第4段落",
+          "quote_or_paraphrase": "影響を受けた投稿者は7日以内に申し立て、所有者がさらに7日以内に判断する。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "room_owner",
+      "description": "モデレーターを任命し、異議申立てを判断する権限",
+      "counterparty_ids": [
+        "moderator",
+        "affected_author",
+        "room_participants"
+      ],
+      "conditions": null,
+      "duration": null,
+      "reciprocal_item": "任命および異議判断に伴う説明・利益相反管理（提案では一部未定義）",
+      "evidence_refs": [
+        {
+          "location": "提案第2・4段落",
+          "quote_or_paraphrase": "所有者がモデレーターを任命し、異議申立てを判断する。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "benefits": [
+    {
+      "actor_id": "room_participants",
+      "description": "危険な指示、資格情報要求、脅威、スパム等への迅速な対応により、ルーム利用上の安全性と可読性が保たれる可能性",
+      "counterparty_ids": [
+        "moderator",
+        "affected_author"
+      ],
+      "conditions": "削除基準が適切に適用される場合",
+      "duration": null,
+      "reciprocal_item": "参加者も同じ投稿基準に従うこと",
+      "evidence_refs": [
+        {
+          "location": "提案第2段落",
+          "quote_or_paraphrase": "削除対象としてスパム、脅威、資格情報要求、悪意ある指示等が列挙されている。",
+          "status": "inferred"
+        }
+      ]
+    },
+    {
+      "actor_id": "moderator",
+      "description": "緊急時に事前通知を待たず被害拡大を抑えるための運用上の裁量",
+      "counterparty_ids": [
+        "affected_author",
+        "room_participants"
+      ],
+      "conditions": "緊急の安全上の危険があると判断する場合",
+      "duration": "一時停止は最長7日",
+      "reciprocal_item": "事後記録と異議申立て",
+      "evidence_refs": [
+        {
+          "location": "提案第2段落",
+          "quote_or_paraphrase": "緊急時には事前通知なしの措置が可能である。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "affected_author",
+      "description": "措置記録を確認し、期限内に異議を申し立てられる手続的利益",
+      "counterparty_ids": [
+        "moderator",
+        "room_owner"
+      ],
+      "conditions": "記録が24時間以内に公開され、申立てが7日以内に行われること",
+      "duration": "定められた申立て・判断期間",
+      "reciprocal_item": "申立期限を守り、必要な説明を提出すること（必要内容は未定義）",
+      "evidence_refs": [
+        {
+          "location": "提案第3・4段落",
+          "quote_or_paraphrase": "措置記録の公開と7日以内の異議申立てが定められている。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "responsibilities": [
+    {
+      "actor_id": "moderator",
+      "description": "措置後24時間以内に理由カテゴリ、メッセージハッシュ、公開DID、措置時刻を公開する責任",
+      "counterparty_ids": [
+        "affected_author",
+        "room_participants",
+        "room_owner"
+      ],
+      "conditions": "投稿を削除した場合",
+      "duration": "措置後24時間以内",
+      "reciprocal_item": "措置権限を行使すること",
+      "evidence_refs": [
+        {
+          "location": "提案第3段落",
+          "quote_or_paraphrase": "削除後24時間以内に所定の記録を公開する。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "room_owner",
+      "description": "適格な異議申立てを判断する責任",
+      "counterparty_ids": [
+        "affected_author"
+      ],
+      "conditions": "投稿者が措置後7日以内に異議を申し立てた場合",
+      "duration": "申立てからさらに7日以内",
+      "reciprocal_item": "異議申立てを判断する権限",
+      "evidence_refs": [
+        {
+          "location": "提案第4段落",
+          "quote_or_paraphrase": "所有者が異議申立てを7日以内に判断する。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "affected_author",
+      "description": "異議申立てを希望する場合に期限内に行動する責任",
+      "counterparty_ids": [
+        "room_owner"
+      ],
+      "conditions": "措置を争う場合",
+      "duration": "7日以内",
+      "reciprocal_item": "異議申立てを受ける権利",
+      "evidence_refs": [
+        {
+          "location": "提案第4段落",
+          "quote_or_paraphrase": "影響を受けた投稿者は7日以内に異議を申し立てる。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "room_owner",
+      "description": "モデレーターを任命する責任",
+      "counterparty_ids": [
+        "moderator",
+        "room_participants",
+        "affected_author"
+      ],
+      "conditions": "公開ルームにモデレーターを置く場合",
+      "duration": null,
+      "reciprocal_item": "任命権限",
+      "evidence_refs": [
+        {
+          "location": "提案第2段落",
+          "quote_or_paraphrase": "所有者は一人以上のモデレーターを任命できる。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "burdens": [
+    {
+      "actor_id": "affected_author",
+      "description": "事前通知なしで投稿削除および一時停止を受け、発言・参加機会を一時的に失う負担",
+      "counterparty_ids": [
+        "moderator",
+        "room_owner"
+      ],
+      "conditions": "モデレーターが緊急の安全上の危険を認定した場合",
+      "duration": "一時停止は最長7日",
+      "reciprocal_item": "迅速な安全対応、事後記録、異議申立て",
+      "evidence_refs": [
+        {
+          "location": "提案第2・5段落",
+          "quote_or_paraphrase": "緊急時には事前通知なしで削除・一時停止を受け得る。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "affected_author",
+      "description": "措置を争うために7日以内に異議申立てを行う必要がある負担",
+      "counterparty_ids": [
+        "room_owner"
+      ],
+      "conditions": "措置を争う場合",
+      "duration": "7日以内",
+      "reciprocal_item": "所有者による判断",
+      "evidence_refs": [
+        {
+          "location": "提案第4段落",
+          "quote_or_paraphrase": "申立期間は7日である。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "moderator",
+      "description": "各削除について24時間以内に公開記録を作成する運用負担",
+      "counterparty_ids": [
+        "affected_author",
+        "room_participants",
+        "room_owner"
+      ],
+      "conditions": "投稿を削除した場合",
+      "duration": "24時間以内",
+      "reciprocal_item": "削除および緊急措置の権限",
+      "evidence_refs": [
+        {
+          "location": "提案第3段落",
+          "quote_or_paraphrase": "削除ごとに24時間以内の公開記録が必要である。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "room_owner",
+      "description": "異議申立てを期限内に判断する運用負担と、兼任時に自己の措置を審査し得る役割上の負担",
+      "counterparty_ids": [
+        "affected_author",
+        "moderator",
+        "room_participants"
+      ],
+      "conditions": "異議申立てが提出された場合",
+      "duration": "申立てから7日以内",
+      "reciprocal_item": "異議申立て決定権限",
+      "evidence_refs": [
+        {
+          "location": "提案第4段落",
+          "quote_or_paraphrase": "所有者が異議を判断し、モデレーターを兼任することがある。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "actor_id": "affected_author",
+      "description": "広い判断語や未定義の反復違反基準により、類似事案の取扱いが一貫しない可能性",
+      "counterparty_ids": [
+        "moderator",
+        "room_owner"
+      ],
+      "conditions": "投稿カテゴリ、緊急性、反復違反の判断に明確な閾値がない場合",
+      "duration": "一時停止から永久排除まで",
+      "reciprocal_item": "安全上の迅速な対応",
+      "likelihood": "unknown",
+      "impact_severity": "high",
+      "evidence_refs": [
+        {
+          "location": "提案第2・5段落",
+          "quote_or_paraphrase": "削除カテゴリ、緊急性、反復違反の詳細基準が定義されていない。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "affected_author",
+      "description": "異議が認められても投稿または参加権限の復旧方法がなく、救済が実行されない可能性",
+      "counterparty_ids": [
+        "room_owner",
+        "moderator"
+      ],
+      "conditions": "異議申立てが認められた場合",
+      "duration": "未定義",
+      "reciprocal_item": "異議申立て制度",
+      "likelihood": "unknown",
+      "impact_severity": "high",
+      "evidence_refs": [
+        {
+          "location": "提案第5段落",
+          "quote_or_paraphrase": "異議が認められた後の削除内容の復旧方法は定義されていない。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "affected_author",
+      "description": "所有者自身または所有者が行った措置に関する異議を、同じ所有者が判断する可能性",
+      "counterparty_ids": [
+        "room_owner"
+      ],
+      "conditions": "所有者がモデレーターを兼任する場合、または所有者自身の行為が争点となる場合",
+      "duration": "異議申立て手続中",
+      "reciprocal_item": "所有者の運用責任と迅速な判断",
+      "likelihood": "unknown",
+      "impact_severity": "high",
+      "evidence_refs": [
+        {
+          "location": "提案第4段落",
+          "quote_or_paraphrase": "所有者はモデレーターを兼任できるが、所有者自身の投稿や行為に関する審査方法は未定義である。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "room_participants",
+      "description": "緊急権限を狭くし過ぎた場合に危険な投稿への対応が遅れ、参加者が被害を受ける可能性",
+      "counterparty_ids": [
+        "moderator",
+        "affected_author"
+      ],
+      "conditions": "事前手続または審査が緊急対応を妨げる場合",
+      "duration": "危険な投稿が残る間",
+      "reciprocal_item": "措置対象者への手続的保護",
+      "likelihood": "unknown",
+      "impact_severity": "high",
+      "evidence_refs": [
+        {
+          "location": "提案第2段落",
+          "quote_or_paraphrase": "緊急の安全上の危険に対し、事前通知なしの対応を認める。",
+          "status": "inferred"
+        }
+      ]
+    },
+    {
+      "actor_id": "room_participants",
+      "description": "削除本文の30日間保存について管理主体、アクセス制御、漏えい対応が未定義であるため、保存情報が不適切に閲覧される可能性",
+      "counterparty_ids": [
+        "moderator",
+        "room_owner"
+      ],
+      "conditions": "削除本文に個人情報、資格情報その他の機微情報が含まれる場合",
+      "duration": "30日間および削除完了まで",
+      "reciprocal_item": "異議審査や安全調査のための証拠保持",
+      "likelihood": "unknown",
+      "impact_severity": "high",
+      "evidence_refs": [
+        {
+          "location": "提案第3段落",
+          "quote_or_paraphrase": "削除本文を30日間非公開で保存してから削除するが、管理方法は示されていない。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "moderator",
+      "description": "サービス障害中も24時間の記録期限が形式上進行し、履行不能または不正確な記録となる可能性",
+      "counterparty_ids": [
+        "room_owner",
+        "affected_author",
+        "room_participants"
+      ],
+      "conditions": "サービス障害が記録期限と重なる場合",
+      "duration": "障害およびその後の記録処理期間",
+      "reciprocal_item": "迅速な公開記録",
+      "likelihood": "unknown",
+      "impact_severity": "medium",
+      "evidence_refs": [
+        {
+          "location": "提案第5段落",
+          "quote_or_paraphrase": "サービス障害中の期限の扱いは定義されていない。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "exceptions": [
+    {
+      "actor_id": "moderator",
+      "description": "緊急の安全上の危険があるとの判断により、事前通知なしで削除と一時停止を行える例外",
+      "stated_rationale": "緊急の安全上の危険への迅速な対応",
+      "scope": "投稿削除および最長7日の一時停止",
+      "duration": "緊急措置時。一時停止は最長7日",
+      "authorized_by": "ルール案に基づくモデレーターの判断",
+      "reviewed_by": "異議申立てがあればルーム所有者。ただし独立性は場合により不十分",
+      "evidence_refs": [
+        {
+          "location": "提案第2・4・5段落",
+          "quote_or_paraphrase": "緊急時には事前通知なしで措置でき、異議は所有者が判断する。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "room_owner",
+      "description": "所有者がモデレーターを兼任できるため、任命者・執行者・異議判断者の役割が重なる場合がある。",
+      "stated_rationale": null,
+      "scope": "所有者が兼任した事案の執行および異議判断",
+      "duration": null,
+      "authorized_by": "ルール案",
+      "reviewed_by": null,
+      "evidence_refs": [
+        {
+          "location": "提案第4段落",
+          "quote_or_paraphrase": "所有者はモデレーターを兼任でき、所有者自身に関する審査方法は未定義である。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "enforcement": {
+    "defined": true,
+    "actors": [
+      "moderator",
+      "room_owner"
+    ],
+    "criteria": "スパム、脅威、資格情報要求、悪意ある指示、反復的な無関係宣伝、緊急の安全上の危険、反復違反。ただし詳細な閾値は未定義。",
+    "process": "モデレーターが削除または一時停止を実施し、反復違反には永久排除があり得る。永久排除の決定主体と手順は明示されていない。",
+    "recording": "削除後24時間以内に理由カテゴリ、メッセージハッシュ、モデレーターの公開DID、措置時刻を公開する。",
+    "reason_giving": true,
+    "conflict_controls": [],
+    "evidence_refs": [
+      {
+        "location": "提案第2・3・5段落",
+        "quote_or_paraphrase": "モデレーターによる削除・停止、24時間以内の記録、反復違反への永久排除が定められている。",
+        "status": "explicit"
+      }
+    ]
+  },
+  "oversight": {
+    "defined": true,
+    "actors": [
+      "room_owner"
+    ],
+    "criteria": null,
+    "process": "措置対象の投稿者が7日以内に異議を申し立て、所有者がさらに7日以内に判断する。",
+    "recording": null,
+    "reason_giving": null,
+    "conflict_controls": [],
+    "evidence_refs": [
+      {
+        "location": "提案第4段落",
+        "quote_or_paraphrase": "異議申立ては所有者が判断するが、理由提示、記録、利益相反管理は定められていない。",
+        "status": "explicit"
+      }
+    ]
+  },
+  "appeals": {
+    "defined": true,
+    "eligible_actors": [
+      "affected_author"
+    ],
+    "decision_maker": "room_owner",
+    "deadline": "措置対象者は7日以内に申立て、所有者はその後7日以内に判断する。",
+    "reason_giving": null,
+    "independence": "partially_independent",
+    "details": "所有者とモデレーターが別人なら一定の役割分離があり得るが、所有者がモデレーターを兼任でき、所有者自身の投稿・行為に関する審査方法も未定義である。申立方法、審査基準、証拠閲覧、判断記録、復旧手続は示されていない。",
+    "evidence_refs": [
+      {
+        "location": "提案第4・5段落",
+        "quote_or_paraphrase": "異議申立ての期限と判断者は定めるが、独立審査と救済の実施方法は未定義である。",
+        "status": "explicit"
+      }
+    ]
+  },
+  "reversibility_test": [
+    {
+      "roles_swapped": [
+        "room_owner",
+        "affected_author"
+      ],
+      "counterfactual_rule": "措置対象の投稿者が所有者の投稿を削除し、所有者からの異議申立ても同じ投稿者が最終判断する。",
+      "result": "raises_concern",
+      "relevant_differences": [
+        "所有者にはルーム運営と安全確保の継続的責任があり、一般投稿者と同一の権限である必要はない。",
+        "一方、運営責任の違いだけでは、自ら関与した措置を自ら最終審査する必要性までは説明しない。"
+      ],
+      "rationale": "立場交換により、執行と異議判断の集中が手続への信頼に影響し得ることが見える。非対称な権限自体には運営上の理由があり得るが、兼任事案の独立確認や回避手続の必要性を検討できる情報が不足している。",
+      "questions": [
+        "所有者またはその措置が争点の場合、誰が代替審査を行うか。",
+        "所有者とモデレーターを分離できない小規模ルームでは、どの最低限の外部確認を置けるか。"
+      ]
+    },
+    {
+      "roles_swapped": [
+        "moderator",
+        "room_participants"
+      ],
+      "counterfactual_rule": "一般参加者が広い判断語に基づいてモデレーターの投稿を即時削除し、最長7日間その参加を停止できる。",
+      "result": "raises_concern",
+      "relevant_differences": [
+        "モデレーターには委任された安全対応責任と措置実行能力がある。",
+        "一般参加者へ同じ権限を配分すると迅速な統制が困難になり得る。"
+      ],
+      "rationale": "役割差は一定の権限非対称を合理化し得る。しかし、判断語の定義、記録、審査、期限、復旧が不十分な場合、必要な非対称性を超える運用となる可能性を評価できない。",
+      "questions": [
+        "削除カテゴリと緊急性を一貫して適用する判断例または閾値はあるか。",
+        "モデレーターの措置記録を誰が定期的に監査するか。"
+      ]
+    },
+    {
+      "roles_swapped": [
+        "affected_author",
+        "room_participants"
+      ],
+      "counterfactual_rule": "危険な投稿の影響を受ける参加者と、誤判定により投稿を削除される投稿者の負担を交換して比較する。",
+      "result": "cannot_assess",
+      "relevant_differences": [
+        "安全上の被害は迅速に拡大する可能性がある。",
+        "誤った削除や停止は発言・参加機会と評価に影響し得る。"
+      ],
+      "rationale": "両方の負担を小さくするには緊急対応と事後救済を組み合わせる必要があるが、想定される危険の頻度、誤判定率、復旧時間の情報がない。",
+      "questions": [
+        "緊急措置の対象となる事案はどの程度発生すると想定しているか。",
+        "誤判定を測定し、判断基準を修正する仕組みはあるか。"
+      ]
+    }
+  ],
+  "detected_issues": [
+    {
+      "issue_type": "conflict_of_interest",
+      "display_level": "clear_issue_candidate",
+      "title": "執行者と異議申立て決定者が同一になり得る",
+      "description": "ルーム所有者はモデレーターを兼任できる一方、異議申立ての判断者でもある。所有者自身の投稿や行為が争点となる場合の回避・代替審査は定められていない。",
+      "actor_ids": [
+        "room_owner",
+        "moderator",
+        "affected_author"
+      ],
+      "rationale": "同一人物が措置とその再検討を担う場合、判断の独立性と説明責任を確認しにくい。小規模ルームでの運用効率という反対利益もあるため、兼任禁止を直ちに結論とせず、代替審査や公開確認の実現可能性を確認する必要がある。",
+      "counter_interpretation": "所有者とモデレーターが通常は別人であり、兼任は人員の少ないルームに必要な場合がある。",
+      "questions": [
+        "所有者が実施した措置または所有者自身に関する異議を誰が判断するか。",
+        "回避、共同審査、外部レビューのうち最低限どれを用いるか。"
+      ],
+      "confidence": 0.97,
+      "evidence_refs": [
+        {
+          "location": "提案第4段落",
+          "quote_or_paraphrase": "所有者はモデレーターを兼任できるが、所有者自身に関する審査方法は未定義である。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "issue_type": "ambiguous_scope",
+      "display_level": "clear_issue_candidate",
+      "title": "削除・緊急措置・永久排除の判断範囲が曖昧",
+      "description": "列挙された投稿カテゴリ、緊急の安全上の危険、反復違反の具体的閾値がなく、永久排除に必要な回数や重大性も定義されていない。",
+      "actor_ids": [
+        "moderator",
+        "room_owner",
+        "affected_author",
+        "room_participants"
+      ],
+      "rationale": "概念を柔軟に保つことは未知の危険への対応に役立つ一方、判断例や比例性基準がないと、異なるモデレーター間で一貫性を確認しにくい。",
+      "counter_interpretation": "危険な行為の種類を完全に列挙できないため、一定の包括的な表現は運用上必要である。",
+      "questions": [
+        "各削除カテゴリの最低限の定義と具体例は何か。",
+        "一時停止の長さと永久排除を決める比例性基準は何か。",
+        "反復違反は何回、どの期間、どの重大性で数えるか。"
+      ],
+      "confidence": 0.98,
+      "evidence_refs": [
+        {
+          "location": "提案第2・5段落",
+          "quote_or_paraphrase": "削除カテゴリと反復違反は示されるが、閾値や永久排除基準は未定義である。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "issue_type": "undefined_enforcement",
+      "display_level": "clear_issue_candidate",
+      "title": "異議成立後の復旧と障害時手続が未定義",
+      "description": "異議申立てが認められた後の投稿復旧、停止解除、永久排除の決定手続、サービス障害時の各期限の停止または延長が定められていない。",
+      "actor_ids": [
+        "affected_author",
+        "moderator",
+        "room_owner"
+      ],
+      "rationale": "異議申立て制度が存在しても、判断結果を実施する手続がなければ救済の実効性を確認できない。障害時の期限未定義は、投稿者と運用者の双方に予測不能な負担を生じさせ得る。",
+      "counter_interpretation": "実装詳細は別の運用手順で定める予定で、この文書は原則だけを示す草案かもしれない。",
+      "questions": [
+        "異議が認められた場合、誰がいつ投稿・権限・記録を復旧または訂正するか。",
+        "永久排除は誰が、どの証拠と手続で決定するか。",
+        "サービス障害中は24時間・7日の期限をどのように扱うか。"
+      ],
+      "confidence": 0.99,
+      "evidence_refs": [
+        {
+          "location": "提案第5段落",
+          "quote_or_paraphrase": "復旧、障害時期限、独立審査は定義されていない。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "issue_type": "asymmetric_burden",
+      "display_level": "needs_attention",
+      "title": "緊急時の負担が措置対象者へ集中する",
+      "description": "緊急認定により、投稿者は事前通知なしの削除・最長7日の停止を受け、7日以内に異議を申し立てる負担を負う。",
+      "actor_ids": [
+        "affected_author",
+        "moderator",
+        "room_participants"
+      ],
+      "rationale": "危険拡大を抑える目的は権限差を合理化し得るが、緊急性の閾値、より軽い措置の可否、早期再確認、誤判定時の復旧が未定義であるため、必要性と比例性を評価する情報が不足している。",
+      "counter_interpretation": "資格情報要求や悪意ある指示への即時対応では、事前通知が危険を長引かせる場合がある。",
+      "questions": [
+        "緊急措置を24時間以内に別の者が再確認する仕組みは必要か。",
+        "削除、表示制限、短時間の保留、一時停止をどの基準で使い分けるか。",
+        "誤判定時の訂正表示と復旧期限は何か。"
+      ],
+      "confidence": 0.86,
+      "evidence_refs": [
+        {
+          "location": "提案第2・4・5段落",
+          "quote_or_paraphrase": "緊急時の事前通知なしの措置、7日の申立期間、最長7日の停止が定められている。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "issue_type": "omitted_stakeholder",
+      "display_level": "needs_attention",
+      "title": "保存される本文に含まれる第三者への影響が扱われていない",
+      "description": "削除本文を30日間保存するが、その本文に含まれる第三者の情報、資格情報、その他の機微情報の最小化、アクセス制御、早期削除は示されていない。",
+      "actor_ids": [
+        "moderator",
+        "room_owner",
+        "room_participants"
+      ],
+      "rationale": "保存は異議審査や安全調査に役立ち得る一方、措置対象者以外の情報主体にも影響し得るため、保存目的とアクセス範囲を確認する必要がある。",
+      "counter_interpretation": "削除本文の保存は、異議申立てを実質的に審査するための証拠保持として必要な場合がある。",
+      "questions": [
+        "保存本文へアクセスできる役割は誰か。",
+        "資格情報など緊急削除が必要な情報は30日を待たず消去または秘匿するか。",
+        "保存期間終了時の削除をどのように確認するか。"
+      ],
+      "confidence": 0.78,
+      "evidence_refs": [
+        {
+          "location": "提案第3段落",
+          "quote_or_paraphrase": "削除本文は30日間非公開で保存されるが、取扱主体と安全措置は示されていない。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "issue_type": "evidence_gap",
+      "display_level": "insufficient_information",
+      "title": "緊急権限と手続負担の比例性を評価する運用資料がない",
+      "description": "想定脅威、発生頻度、誤判定率、平均審査時間、保存情報へのアクセス、モデレーター数、障害頻度が示されていない。",
+      "actor_ids": [
+        "room_owner",
+        "moderator",
+        "affected_author",
+        "room_participants"
+      ],
+      "rationale": "草案の構造上の空白は確認できるが、緊急権限の必要性、期間、監督負担が実際の危険に比例するかは運用資料なしでは評価できない。",
+      "counter_interpretation": "デモ用の架空草案であるため、実運用資料が存在しないこと自体は想定どおりである。",
+      "questions": [
+        "想定する脅威モデルと典型事例は何か。",
+        "誤判定、異議成立、復旧時間をどの指標で記録するか。",
+        "小規模・大規模ルームで同じ期限と審査構造を用いるか。"
+      ],
+      "confidence": 0.96,
+      "evidence_refs": [
+        {
+          "location": "提案全体",
+          "quote_or_paraphrase": "運用実績、脅威頻度、誤判定、審査能力を示す資料は含まれていない。",
+          "status": "inferred"
+        }
+      ]
+    }
+  ],
+  "missing_information": [
+    {
+      "question": "削除カテゴリ、緊急性、反復違反、永久排除の具体的な定義と比例性基準は何か。",
+      "why_it_matters": "措置の一貫性、必要性、期間、対象範囲を人間が確認するため。",
+      "affected_fields": [
+        "enforcement.criteria",
+        "enforcement.process",
+        "detected_issues"
+      ]
+    },
+    {
+      "question": "所有者または所有者が行った措置に関する異議を誰が審査するか。",
+      "why_it_matters": "執行者と再審査者の利益相反を制御できるか確認するため。",
+      "affected_fields": [
+        "oversight.actors",
+        "oversight.conflict_controls",
+        "appeals.independence"
+      ]
+    },
+    {
+      "question": "異議申立ての方法、提出可能な証拠、判断理由の公開範囲は何か。",
+      "why_it_matters": "異議申立てが実際に利用可能で、判断を検証できる手続か確認するため。",
+      "affected_fields": [
+        "appeals.details",
+        "appeals.reason_giving",
+        "oversight.recording"
+      ]
+    },
+    {
+      "question": "異議が認められた後、投稿、参加権限、公開記録を誰がいつ復旧・訂正するか。",
+      "why_it_matters": "異議申立ての結果が実際の救済につながるか確認するため。",
+      "affected_fields": [
+        "enforcement.process",
+        "appeals.details"
+      ]
+    },
+    {
+      "question": "削除本文を保存する主体、保存場所、アクセス権、暗号化、早期削除、削除確認はどのように定めるか。",
+      "why_it_matters": "証拠保持の利益と情報漏えい・過剰保持の危険を比較するため。",
+      "affected_fields": [
+        "risks",
+        "responsibilities",
+        "evidence_needed"
+      ]
+    },
+    {
+      "question": "サービス障害中の24時間・7日期限は停止、延長または代替手段の対象となるか。",
+      "why_it_matters": "運用不能時に投稿者と運用者の権利・責任が失われないか確認するため。",
+      "affected_fields": [
+        "enforcement.recording",
+        "appeals.deadline",
+        "responsibilities"
+      ]
+    },
+    {
+      "question": "永久排除の決定主体、事前通知、証拠確認、再審査、期間後の見直しはどのように行うか。",
+      "why_it_matters": "最も重大な措置の必要性、比例性、可逆性を確認するため。",
+      "affected_fields": [
+        "enforcement.process",
+        "appeals.details",
+        "reversibility_test"
+      ]
+    }
+  ],
+  "evidence_needed": [
+    {
+      "evidence": "削除カテゴリ、緊急性、一時停止期間、永久排除を区別する判断基準と例示",
+      "purpose": "類似事案の一貫性と措置の比例性を検討する。",
+      "possible_source": "公開モデレーション方針または架空デモ用の判断表",
+      "required_before_action": true
+    },
+    {
+      "evidence": "所有者兼任時の回避・代替審査・共同審査の手順",
+      "purpose": "異議申立て判断の独立性と利益相反管理を確認する。",
+      "possible_source": "役割分担表または異議申立て手順",
+      "required_before_action": true
+    },
+    {
+      "evidence": "異議成立後の投稿復旧、停止解除、記録訂正、通知に関する実行手順",
+      "purpose": "救済が判断だけで終わらず実施されることを確認する。",
+      "possible_source": "復旧手順書または状態遷移仕様",
+      "required_before_action": true
+    },
+    {
+      "evidence": "削除本文の保存・アクセス・暗号化・削除確認に関する管理仕様",
+      "purpose": "30日保存の必要性と情報保護措置を比較する。",
+      "possible_source": "データ保持方針またはアクセス権限表",
+      "required_before_action": true
+    },
+    {
+      "evidence": "サービス障害時の期限停止・延長・代替通知の規則",
+      "purpose": "障害耐性と期限の相互性を確認する。",
+      "possible_source": "可用性・継続運用手順",
+      "required_before_action": true
+    },
+    {
+      "evidence": "想定脅威、措置件数、誤判定、異議成立、復旧時間を測る指標",
+      "purpose": "緊急権限、保存期間、審査期限が実際の危険と運用能力に比例するか検討する。",
+      "possible_source": "試験運用記録または事後評価計画",
+      "required_before_action": false
+    }
+  ],
+  "alternative_interpretations": [
+    {
+      "interpretation": "緊急権限は、資格情報要求や悪意ある指示による被害を抑えるための限定的な安全措置として設計されている。",
+      "supports": [
+        "対象カテゴリが安全上の危険とスパムに限定されている。",
+        "措置後24時間以内の公開記録と異議申立てが用意されている。",
+        "一時停止には最長7日の上限がある。"
+      ],
+      "weaknesses": [
+        "緊急性の閾値と早期再確認がない。",
+        "所有者兼任時の独立審査がない。",
+        "異議成立後の復旧が定義されていない。"
+      ],
+      "evidence_that_would_help": [
+        "緊急措置の具体例と除外例",
+        "24時間以内の別担当者による再確認手順",
+        "誤判定時の復旧時間目標"
+      ]
+    },
+    {
+      "interpretation": "この文書は小規模ルーム向けの軽量な原則草案であり、詳細な運用は別文書に委ねる意図である。",
+      "supports": [
+        "文書自身が架空のデモ用草案であると明記している。",
+        "基本的な期限、記録、異議申立ての骨格は示されている。"
+      ],
+      "weaknesses": [
+        "別文書の存在や優先関係が示されていない。",
+        "重大な措置と復旧の最低条件まで未定義である。",
+        "所有者が関係する事案の扱いは原則レベルでも必要になり得る。"
+      ],
+      "evidence_that_would_help": [
+        "参照される運用手順の一覧",
+        "この草案と詳細手順の優先関係",
+        "規模別の最低限要件"
+      ]
+    },
+    {
+      "interpretation": "削除本文の30日保存は、異議申立てと安全調査に必要な証拠を確保するためである。",
+      "supports": [
+        "異議申立てには元の投稿内容を確認する必要が生じ得る。",
+        "30日後の削除期限が明示されている。"
+      ],
+      "weaknesses": [
+        "保存主体とアクセス権が不明である。",
+        "資格情報など保存自体が危険な情報の例外がない。",
+        "削除完了の検証方法がない。"
+      ],
+      "evidence_that_would_help": [
+        "保存目的ごとのアクセス権限",
+        "危険情報の即時秘匿・早期削除規則",
+        "保存終了時の削除確認記録"
+      ]
+    }
+  ],
+  "confidence": {
+    "overall": 0.87,
+    "level": "high",
+    "rationale": "提案は架空の完全な草案として役割、権限、期限、記録、異議申立ておよび複数の未定義事項を明示しているため、構造上の問題候補には高い確信がある。一方、実運用データがなく、緊急権限や保存期間の実際の必要性・比例性は判断できない。"
+  },
+  "human_review_required": true,
+  "disclaimer": "法的助言ではありません。採択や処罰を自動化せず、原文、証拠、代替解釈、影響を人間が確認する必要があります。"
+}

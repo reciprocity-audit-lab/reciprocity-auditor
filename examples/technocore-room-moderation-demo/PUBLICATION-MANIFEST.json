@@ -1,0 +1,36 @@
+{
+  "package_type": "public_worked_example",
+  "case_id": "technocore-room-moderation-demo",
+  "proposal_sha256": "7c40b9a1a24c1ad22df90c79d305cbc192097098ffcf52311faf99b06297fe47",
+  "schema_version": "0.1.0",
+  "validation": {
+    "status": "pass",
+    "error_count": 0
+  },
+  "human_review": {
+    "status": "reviewed",
+    "reviewer_label": "reviewer-1",
+    "decision": "acceptable_for_public_demonstration",
+    "proposal_approved": false,
+    "precise_timestamp_published": false
+  },
+  "privacy_transformations": {
+    "synthetic_timestamp": "1980-01-01T00:00:00Z",
+    "analysis_packet_created_at_normalized": true,
+    "report_generated_at_normalized": true,
+    "semantic_analysis_changed": false
+  },
+  "generation_record": {
+    "model_display_name": null,
+    "reasoning_setting": null,
+    "configuration_comparability": "not_demonstrated",
+    "independent_model_evaluation": false
+  },
+  "limitations": [
+    "This is a fictional demonstration, not an official Technocore rule.",
+    "The example does not establish general audit accuracy.",
+    "The generated report retains its draft-at-generation state; subsequent human review is recorded separately.",
+    "No legal, moral, adoption, enforcement, or punishment decision is made."
+  ]
+}
+
