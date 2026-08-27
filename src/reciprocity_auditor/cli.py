@@ -8,6 +8,7 @@ from pathlib import Path
 from .errors import AuditorError
 from .io_utils import project_root
 from .packet import prepare_case
+from .publication import export_public_case
 from .rendering import render_analysis
 from .validation import validate_analysis
 from .workflow import REVIEW_STATES, case_status, record_review
@@ -42,6 +43,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     status = commands.add_parser("status", help="ケース状態を機微情報なしで表示")
     status.add_argument("--case", type=Path, required=True, help="ケースフォルダ")
+
+    export_public = commands.add_parser("export-public", help="レビュー済みケースの公開用コピーを安全に作成")
+    export_public.add_argument("--case", type=Path, required=True, help="レビュー済みケースフォルダ")
+    export_public.add_argument("--output", type=Path, required=True, help="新規公開用フォルダ")
+    export_public.add_argument("--zip", type=Path, help="任意の決定的ZIP出力先")
 
     commands.add_parser("test", help="ローカルunittestを実行")
     return parser
@@ -114,6 +120,19 @@ def main(argv: list[str] | None = None) -> int:
             print(f"報告書: {status_value['report']}")
             print(f"人間確認: {status_value['human_review']}")
             print(f"現在状態: {status_value['current']}")
+            return 0
+
+        if args.command == "export-public":
+            result = export_public_case(args.case, args.output, zip_path=args.zip)
+            print("export-public: 完了")
+            print(f"case_id: {result.case_id}")
+            print(f"output: {result.output_dir.name}")
+            print(f"files: {result.file_count}")
+            print("privacy_scan: pass")
+            print("timestamps: normalized")
+            if result.zip_path is not None:
+                print(f"zip: {result.zip_path.name}")
+                print(f"zip_sha256: {result.zip_sha256}")
             return 0
 
         if args.command == "test":

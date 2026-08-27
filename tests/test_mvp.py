@@ -8,11 +8,13 @@ import re
 import shutil
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 from reciprocity_auditor.cli import main
 from reciprocity_auditor.errors import AuditorError
 from reciprocity_auditor.packet import prepare_case
+from reciprocity_auditor.publication import PUBLIC_TIMESTAMP, export_public_case
 from reciprocity_auditor.rendering import render_analysis
 from reciprocity_auditor.validation import validate_analysis
 from reciprocity_auditor.workflow import case_status, record_review
@@ -304,6 +306,148 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
         self.assertIn("現在状態: reviewed", stdout.getvalue())
         self.assertTrue((case_dir / "audit-report-ja.md").is_file())
         self.assertTrue((case_dir / "review.json").is_file())
+
+    def _reviewed_case(self, case_id: str = "publication-case") -> Path:
+        case_dir = self.prepare(case_id=case_id)
+        analysis = self.place_analysis(case_dir)
+        validate_analysis(analysis)
+        render_analysis(analysis)
+        record_review(case_dir, "reviewed", reviewer_label="reviewer-1")
+        return case_dir
+
+    def test_export_public_creates_privacy_hardened_bundle_and_zip(self) -> None:
+        case_dir = self._reviewed_case()
+        output = self.temp_root / "public-output"
+        zip_path = self.temp_root / "public-output.zip"
+        original_proposal = (case_dir / "proposal.txt").read_bytes()
+        source_hashes_before = {
+            path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in case_dir.iterdir()
+            if path.is_file()
+        }
+
+        result = export_public_case(case_dir, output, zip_path=zip_path)
+
+        self.assertEqual("publication-case", result.case_id)
+        self.assertEqual(8, result.file_count)
+        self.assertTrue(zip_path.is_file())
+        self.assertEqual(hashlib.sha256(zip_path.read_bytes()).hexdigest(), result.zip_sha256)
+        self.assertEqual(original_proposal, (output / "proposal.txt").read_bytes())
+        source_hashes_after = {
+            path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in case_dir.iterdir()
+            if path.is_file()
+        }
+        self.assertEqual(source_hashes_before, source_hashes_after)
+        self.assertIn(PUBLIC_TIMESTAMP, (output / "analysis-packet.md").read_text(encoding="utf-8"))
+        self.assertIn(PUBLIC_TIMESTAMP, (output / "audit-report-ja.md").read_text(encoding="utf-8"))
+        analysis = json.loads((output / "analysis.json").read_text(encoding="utf-8"))
+        self.assertEqual(PUBLIC_TIMESTAMP, analysis["audit_metadata"]["generated_at"])
+        self.assertFalse((output / "review.json").exists())
+        self.assertIn(
+            "確認日時: 公開用エクスポートでは省略",
+            (output / "HUMAN-REVIEW-NOTE-JA.md").read_text(encoding="utf-8"),
+        )
+
+        for line in (output / "SHA256SUMS.txt").read_text(encoding="utf-8").splitlines():
+            expected, relative = line.split("  ", 1)
+            self.assertEqual(expected, hashlib.sha256((output / relative).read_bytes()).hexdigest())
+
+        with zipfile.ZipFile(zip_path) as archive:
+            self.assertTrue(all(info.date_time == (1980, 1, 1, 0, 0, 0) for info in archive.infolist()))
+            self.assertTrue(
+                all(
+                    not name.startswith(("/", "\\")) and ".." not in Path(name).parts
+                    for name in archive.namelist()
+                )
+            )
+
+    def test_export_public_zip_is_deterministic(self) -> None:
+        case_dir = self._reviewed_case()
+        first_zip = self.temp_root / "first.zip"
+        second_zip = self.temp_root / "second.zip"
+        export_public_case(case_dir, self.temp_root / "first-output", zip_path=first_zip)
+        export_public_case(case_dir, self.temp_root / "second-output", zip_path=second_zip)
+        self.assertEqual(first_zip.read_bytes(), second_zip.read_bytes())
+
+    def test_export_public_requires_reviewed_state(self) -> None:
+        case_dir = self.prepare(case_id="draft-case")
+        analysis = self.place_analysis(case_dir)
+        validate_analysis(analysis)
+        render_analysis(analysis)
+        with self.assertRaisesRegex(AuditorError, "reviewed"):
+            export_public_case(case_dir, self.temp_root / "blocked-output")
+        self.assertFalse((self.temp_root / "blocked-output").exists())
+
+    def test_export_public_blocks_sensitive_report_without_leaving_output(self) -> None:
+        case_dir = self._reviewed_case()
+        with (case_dir / "audit-report-ja.md").open("a", encoding="utf-8") as stream:
+            stream.write("\ncontact: person" + "@" + "example.com\n")
+        output = self.temp_root / "blocked-output"
+        with self.assertRaisesRegex(AuditorError, "公開を妨げる"):
+            export_public_case(case_dir, output)
+        self.assertFalse(output.exists())
+
+    def test_export_public_rejects_output_inside_case(self) -> None:
+        case_dir = self._reviewed_case()
+        with self.assertRaisesRegex(AuditorError, "元ケースの外"):
+            export_public_case(case_dir, case_dir / "public")
+
+    def test_export_public_rejects_symlinked_source_file(self) -> None:
+        case_dir = self._reviewed_case()
+        report = case_dir / "audit-report-ja.md"
+        outside = self.temp_root / "outside-report.md"
+        outside.write_bytes(report.read_bytes())
+        report.unlink()
+        try:
+            report.symlink_to(outside)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlinks are unavailable in this environment")
+        with self.assertRaisesRegex(AuditorError, "シンボリックリンク"):
+            export_public_case(case_dir, self.temp_root / "blocked-output")
+
+    def test_export_public_rejects_tampered_review_record(self) -> None:
+        case_dir = self._reviewed_case()
+        review = json.loads((case_dir / "review.json").read_text(encoding="utf-8"))
+        review.pop("meaning")
+        (case_dir / "review.json").write_text(
+            json.dumps(review, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(AuditorError, "レビュー記録"):
+            export_public_case(case_dir, self.temp_root / "blocked-output")
+
+    def test_export_public_rejects_unsafe_tampered_case_id(self) -> None:
+        case_dir = self._reviewed_case()
+        case = json.loads((case_dir / "case.json").read_text(encoding="utf-8"))
+        case["case_id"] = "../escape"
+        (case_dir / "case.json").write_text(
+            json.dumps(case, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(AuditorError, "ケースID"):
+            export_public_case(case_dir, self.temp_root / "blocked-output")
+
+    def test_cli_export_public(self) -> None:
+        case_dir = self._reviewed_case()
+        output = self.temp_root / "cli-public"
+        zip_path = self.temp_root / "cli-public.zip"
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            exit_code = main(
+                [
+                    "export-public",
+                    "--case",
+                    str(case_dir),
+                    "--output",
+                    str(output),
+                    "--zip",
+                    str(zip_path),
+                ]
+            )
+        self.assertEqual(0, exit_code)
+        self.assertIn("privacy_scan: pass", stdout.getvalue())
+        self.assertIn("zip_sha256:", stdout.getvalue())
 
     def test_source_has_no_network_client_imports(self) -> None:
         source = "\n".join(
