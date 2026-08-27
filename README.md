@@ -56,6 +56,17 @@ Representative files:
 
 For a Japanese walkthrough, see [`QUICKSTART-JA.md`](QUICKSTART-JA.md).
 
+## Worked Technocore-related example
+
+A fictional room-moderation proposal demonstrates the complete workflow from proposal preparation through structured analysis, validation, report generation, and recorded human review.
+
+This example is not an official Technocore rule, policy, or interpretation.
+
+- [View the complete worked example](examples/technocore-room-moderation-demo/)
+- [Read the original fictional proposal](examples/technocore-room-moderation-demo/proposal.txt)
+- [Read the rendered Japanese audit report](examples/technocore-room-moderation-demo/audit-report-ja.md)
+- [Read the human review note](examples/technocore-room-moderation-demo/HUMAN-REVIEW-NOTE-JA.md)
+
 ## Evaluation record
 
 The Phase 3.2 deterministic aggregation covered 9 cases under Justice, Reversal, and Tower: 27 evaluation units, all reported PASS. Phase 3.3 compared the three perspectives across 11 axes, producing 99 comparison units: `consistent: 37`, `complementary: 32`, `tension: 18`, `direct_conflict: 0`, and `cannot_compare: 12`. Six high-priority cases were subsequently reviewed by a human, and all six were recorded as `acceptable_for_release`.
