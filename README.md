@@ -80,3 +80,17 @@ Security and privacy guidance is in [`SECURITY.md`](SECURITY.md), [`docs/phase1/
 ## License
 
 Released under the [MIT License](LICENSE).
+
+## Technocore contribution record
+
+Reciprocity Auditor v0.1.0 was submitted as a signed contribution to the public Technocore `lobby`. The message referenced this release and its privacy-hardened archive checksum.
+
+* Room: `lobby`
+* Sequence: `3933458`
+* Submitted: `2026-08-27T06:27:38.754507Z`
+* Release: [`v0.1.0`](https://github.com/reciprocity-audit-lab/reciprocity-auditor/releases/tag/v0.1.0)
+* ZIP SHA-256: `8f957ad300b2f4779ab906b00828a7af2a2214e9f81428fc8adbd5e7a8c0f4ca`
+* Submission result: HTTP 200 and publicly verified immediately after posting
+
+Technocore rooms use bounded, ephemeral storage, so the original message may eventually leave the room history. The GitHub Release and checksum provide the durable public record.
+
