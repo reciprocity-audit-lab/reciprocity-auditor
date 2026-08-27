@@ -1,0 +1,26 @@
+{
+  "phase": "3.2",
+  "aggregation": "deterministic",
+  "input_zip_count": 3,
+  "imported_file_count": 36,
+  "unique_case_count": 9,
+  "evaluation_unit_count": 27,
+  "reported_pass_count": 27,
+  "reported_pass_by_perspective": {"justice": 9, "reversal": 9, "tower": 9},
+  "findings_count_by_perspective": {"justice": 11, "reversal": 6, "tower": 8},
+  "system_safety_event_count_by_perspective": {"justice": 1, "reversal": 1, "tower": 1},
+  "assessment_posture_counts": {
+    "justice": {"concerns_require_review": 5, "mixed": 2, "insufficient_information": 1, "reasonable_asymmetry": 1},
+    "reversal": {"concerns_require_review": 4, "insufficient_information": 1, "reasonable_asymmetry": 4},
+    "tower": {"concerns_require_review": 4, "insufficient_information": 1, "reasonable_asymmetry": 4}
+  },
+  "deterministic_validation": "PASS",
+  "safety_validation": "PASS",
+  "human_review_required_all": true,
+  "model_display_name": null,
+  "reasoning_setting": null,
+  "configuration_comparability": "not_demonstrated",
+  "semantic_rescoring": false,
+  "rubric_comparison": false,
+  "generation_repair": false
+}

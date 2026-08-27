@@ -1,0 +1,252 @@
+{
+  "audit_metadata": {
+    "report_id": "case-001",
+    "schema_version": "0.1.0",
+    "source_title": "予約取消条件",
+    "source_version": "fixture-1",
+    "scope": "提示された一文のみ",
+    "generated_at": "2000-01-01T00:00:00Z"
+  },
+  "proposal_summary": {
+    "summary": "利用者と運営者の双方に取消権があるが、利用者には全額没収が明示され、運営者取消時の補償条件は示されていない。",
+    "stated_purpose": null,
+    "scope": "予約取消と金銭負担",
+    "source_status": "complete"
+  },
+  "actors": [
+    {
+      "id": "user",
+      "name": "利用者",
+      "roles": ["予約者", "支払者"],
+      "party_status": "contracting_party",
+      "consent_mechanism": null,
+      "exit_mechanism": "予約取消",
+      "evidence_refs": [
+        {
+          "location": "提案文前半",
+          "quote_or_paraphrase": "利用者は予約を取り消せるが料金は全額没収される。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "id": "operator",
+      "name": "運営者",
+      "roles": ["サービス運営者", "取消権者"],
+      "party_status": "contracting_party",
+      "consent_mechanism": null,
+      "exit_mechanism": "理由を示さない予約取消",
+      "evidence_refs": [
+        {
+          "location": "提案文後半",
+          "quote_or_paraphrase": "運営者は理由を示さず予約を取り消せる。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "affected_non_parties": [
+    {
+      "name": "外部サービス提供者",
+      "impact_path": "予約取消に伴う準備費用や再手配",
+      "impact": "取消時の費用配分に間接的な影響を受ける可能性がある。",
+      "status": "possible",
+      "questions": ["外部提供者に取消費用が発生するか。"]
+    }
+  ],
+  "rights": [
+    {
+      "actor_id": "user",
+      "description": "予約を取り消す権利",
+      "counterparty_ids": ["operator"],
+      "conditions": null,
+      "duration": null,
+      "reciprocal_item": "全額没収の負担",
+      "evidence_refs": [
+        {
+          "location": "提案文前半",
+          "quote_or_paraphrase": "利用者はいつでも取り消せる。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "actor_id": "operator",
+      "description": "理由を示さず予約を取り消す権利",
+      "counterparty_ids": ["user"],
+      "conditions": null,
+      "duration": null,
+      "reciprocal_item": null,
+      "evidence_refs": [
+        {
+          "location": "提案文後半",
+          "quote_or_paraphrase": "運営者は理由を示さず取り消せる。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "benefits": [
+    {
+      "actor_id": "operator",
+      "description": "利用者取消時に料金を保持する利益",
+      "counterparty_ids": ["user"],
+      "conditions": "利用者が取り消した場合",
+      "duration": null,
+      "reciprocal_item": "利用者の全額負担",
+      "evidence_refs": [
+        {
+          "location": "提案文前半",
+          "quote_or_paraphrase": "料金は全額没収される。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "responsibilities": [],
+  "burdens": [
+    {
+      "actor_id": "user",
+      "description": "取消時に料金全額を失う負担",
+      "counterparty_ids": ["operator"],
+      "conditions": "利用者が取り消した場合",
+      "duration": null,
+      "reciprocal_item": "運営者取消時の補償は明記されていない",
+      "evidence_refs": [
+        {
+          "location": "提案文前半",
+          "quote_or_paraphrase": "料金は全額没収される。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "actor_id": "user",
+      "description": "運営者取消時の準備費等を回収できない可能性",
+      "counterparty_ids": ["operator"],
+      "conditions": "運営者が予約を取り消した場合",
+      "duration": null,
+      "reciprocal_item": null,
+      "likelihood": "unknown",
+      "impact_severity": "unknown",
+      "evidence_refs": [
+        {
+          "location": "提案文後半",
+          "quote_or_paraphrase": "補償条件は記載されていない。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "exceptions": [],
+  "enforcement": {
+    "defined": false,
+    "actors": [],
+    "criteria": null,
+    "process": null,
+    "recording": null,
+    "reason_giving": null,
+    "conflict_controls": [],
+    "evidence_refs": []
+  },
+  "oversight": {
+    "defined": false,
+    "actors": [],
+    "criteria": null,
+    "process": null,
+    "recording": null,
+    "reason_giving": null,
+    "conflict_controls": [],
+    "evidence_refs": []
+  },
+  "appeals": {
+    "defined": false,
+    "eligible_actors": [],
+    "decision_maker": null,
+    "deadline": null,
+    "reason_giving": null,
+    "independence": "unknown",
+    "details": null,
+    "evidence_refs": []
+  },
+  "reversibility_test": [
+    {
+      "roles_swapped": ["user", "operator"],
+      "counterfactual_rule": "運営者が取り消す場合に料金相当の補償を負い、利用者は理由を示さず取り消せる。",
+      "result": "raises_concern",
+      "relevant_differences": ["運営者側には予約資源の実費が発生する可能性がある。"],
+      "rationale": "双方の取消権に対応する金銭負担が同じ根拠で説明できるか、文面だけでは確認できない。",
+      "questions": ["双方の取消時に発生する実費を同じ基準で算定できるか。"]
+    }
+  ],
+  "detected_issues": [
+    {
+      "issue_type": "asymmetric_burden",
+      "display_level": "clear_issue_candidate",
+      "title": "取消時の金銭負担の対応が不明",
+      "description": "利用者取消時の全額負担は明示される一方、運営者取消時の補償条件が示されていない。",
+      "actor_ids": ["user", "operator"],
+      "rationale": "双方に取消権があるが、それぞれの取消に対応する責任と負担の基準がそろっていない。",
+      "counter_interpretation": "運営者は予約時点で回収不能な実費を負う可能性があり、利用者側の取消料に合理的理由があり得る。",
+      "questions": ["取消時期別の実費はいくらか。", "運営者都合の取消時に按分補償を設けるか。"],
+      "confidence": 0.84,
+      "evidence_refs": [
+        {
+          "location": "提案文全体",
+          "quote_or_paraphrase": "利用者には全額没収、運営者側の補償は記載なし。",
+          "status": "explicit"
+        }
+      ]
+    },
+    {
+      "issue_type": "undefined_enforcement",
+      "display_level": "needs_attention",
+      "title": "取消と返金の運用手続が未定義",
+      "description": "取消通知、返金処理、記録、判断主体が示されていない。",
+      "actor_ids": ["user", "operator"],
+      "rationale": "権利と負担を一貫して運用するための基準を確認できない。",
+      "counter_interpretation": "別の運用規程に手続が定められている可能性がある。",
+      "questions": ["取消記録と理由提示を誰が管理するか。"],
+      "confidence": 0.72,
+      "evidence_refs": [
+        {
+          "location": "提案文全体",
+          "quote_or_paraphrase": "運用手続への言及がない。",
+          "status": "explicit"
+        }
+      ]
+    }
+  ],
+  "missing_information": [
+    {
+      "question": "双方の取消時に実際に発生する費用はいくらか。",
+      "why_it_matters": "負担差に合理的な根拠と比例性があるかを確認するため。",
+      "affected_fields": ["burdens", "benefits", "reversibility_test"]
+    }
+  ],
+  "evidence_needed": [
+    {
+      "evidence": "取消時期別の実費と過去の取消処理記録",
+      "purpose": "全額没収と補償条件の比例性を確認する。",
+      "possible_source": "料金規程と運用記録",
+      "required_before_action": true
+    }
+  ],
+  "alternative_interpretations": [
+    {
+      "interpretation": "利用者取消時の全額負担は、予約済み資源の回収不能費用を補うためである。",
+      "supports": ["予約サービスでは事前に資源を確保する場合がある。"],
+      "weaknesses": ["提案文に実費や時期別基準がない。"],
+      "evidence_that_would_help": ["予約原価、再販売可能性、取消時期別損失"]
+    }
+  ],
+  "confidence": {
+    "overall": 0.78,
+    "level": "medium",
+    "rationale": "明示された負担差は確認できるが、実費、別規程、運用文脈が不足している。"
+  },
+  "human_review_required": true,
+  "disclaimer": "この監査は法的助言ではありません。採択や処罰を自動化せず、人間による原文・事実・文脈の確認が必要です。"
+}

@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/reciprocity-auditor/audit-schema-v0.1.json",
+  "title": "Reciprocity Auditor Result",
+  "description": "契約構造と手続の問題候補を記録するPhase 1用スキーマ。公平性、適法性、採否を最終判定しない。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proposal_summary",
+    "actors",
+    "affected_non_parties",
+    "rights",
+    "benefits",
+    "responsibilities",
+    "burdens",
+    "risks",
+    "exceptions",
+    "enforcement",
+    "oversight",
+    "appeals",
+    "reversibility_test",
+    "detected_issues",
+    "missing_information",
+    "evidence_needed",
+    "alternative_interpretations",
+    "confidence",
+    "human_review_required",
+    "disclaimer"
+  ],
+  "properties": {
+    "audit_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "report_id": { "type": "string", "minLength": 1 },
+        "schema_version": { "type": "string", "const": "0.1.0" },
+        "source_title": { "type": ["string", "null"] },
+        "source_version": { "type": ["string", "null"] },
+        "scope": { "type": ["string", "null"] },
+        "generated_at": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "proposal_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "stated_purpose", "scope", "source_status"],
+      "properties": {
+        "summary": { "type": "string", "minLength": 1 },
+        "stated_purpose": { "type": ["string", "null"] },
+        "scope": { "type": ["string", "null"] },
+        "source_status": {
+          "type": "string",
+          "enum": ["complete", "partial", "excerpt", "unknown"]
+        }
+      }
+    },
+    "actors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/actor" }
+    },
+    "affected_non_parties": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/affectedParty" }
+    },
+    "rights": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/allocation" }
+    },
+    "benefits": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/allocation" }
+    },
+    "responsibilities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/allocation" }
+    },
+    "burdens": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/allocation" }
+    },
+    "risks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/risk" }
+    },
+    "exceptions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/exception" }
+    },
+    "enforcement": { "$ref": "#/$defs/governanceFunction" },
+    "oversight": { "$ref": "#/$defs/governanceFunction" },
+    "appeals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defined", "eligible_actors", "decision_maker", "deadline", "reason_giving", "independence", "details", "evidence_refs"],
+      "properties": {
+        "defined": { "type": "boolean" },
+        "eligible_actors": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "decision_maker": { "type": ["string", "null"] },
+        "deadline": { "type": ["string", "null"] },
+        "reason_giving": { "type": ["boolean", "null"] },
+        "independence": { "type": "string", "enum": ["independent", "partially_independent", "same_as_enforcer", "unknown"] },
+        "details": { "type": ["string", "null"] },
+        "evidence_refs": { "$ref": "#/$defs/evidenceRefs" }
+      }
+    },
+    "reversibility_test": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["roles_swapped", "counterfactual_rule", "result", "relevant_differences", "rationale", "questions"],
+        "properties": {
+          "roles_swapped": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string", "minLength": 1 } },
+          "counterfactual_rule": { "type": "string", "minLength": 1 },
+          "result": { "type": "string", "enum": ["passes", "raises_concern", "not_applicable", "cannot_assess"] },
+          "relevant_differences": { "type": "array", "items": { "type": "string" } },
+          "rationale": { "type": "string", "minLength": 1 },
+          "questions": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "detected_issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    },
+    "missing_information": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/informationGap" }
+    },
+    "evidence_needed": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidenceNeed" }
+    },
+    "alternative_interpretations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["interpretation", "supports", "weaknesses", "evidence_that_would_help"],
+        "properties": {
+          "interpretation": { "type": "string", "minLength": 1 },
+          "supports": { "type": "array", "items": { "type": "string" } },
+          "weaknesses": { "type": "array", "items": { "type": "string" } },
+          "evidence_that_would_help": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overall", "level", "rationale"],
+      "properties": {
+        "overall": { "type": "number", "minimum": 0, "maximum": 1 },
+        "level": { "type": "string", "enum": ["low", "medium", "high"] },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "human_review_required": { "type": "boolean", "const": true },
+    "disclaimer": {
+      "type": "string",
+      "minLength": 20,
+      "description": "法的助言ではなく、採択・拒否・処罰を自動化せず、人間確認が必要である旨を含める。"
+    }
+  },
+  "$defs": {
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["location", "quote_or_paraphrase", "status"],
+        "properties": {
+          "location": { "type": ["string", "null"] },
+          "quote_or_paraphrase": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["explicit", "inferred", "reported", "unverified"] }
+        }
+      }
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "roles", "party_status", "consent_mechanism", "exit_mechanism", "evidence_refs"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+        "name": { "type": "string", "minLength": 1 },
+        "roles": { "type": "array", "minItems": 1, "items": { "type": "string" }, "uniqueItems": true },
+        "party_status": { "type": "string", "enum": ["proposer", "contracting_party", "enforcer", "overseer", "beneficiary", "obligated_party", "other", "unknown"] },
+        "consent_mechanism": { "type": ["string", "null"] },
+        "exit_mechanism": { "type": ["string", "null"] },
+        "evidence_refs": { "$ref": "#/$defs/evidenceRefs" }
+      }
+    },
+    "affectedParty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "impact_path", "impact", "status", "questions"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "impact_path": { "type": "string", "minLength": 1 },
+        "impact": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["explicit", "inferred", "possible", "unknown"] },
+        "questions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_id", "description", "counterparty_ids", "conditions", "duration", "reciprocal_item", "evidence_refs"],
+      "properties": {
+        "actor_id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "counterparty_ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "conditions": { "type": ["string", "null"] },
+        "duration": { "type": ["string", "null"] },
+        "reciprocal_item": { "type": ["string", "null"] },
+        "evidence_refs": { "$ref": "#/$defs/evidenceRefs" }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_id", "description", "counterparty_ids", "conditions", "duration", "reciprocal_item", "likelihood", "impact_severity", "evidence_refs"],
+      "properties": {
+        "actor_id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "counterparty_ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "conditions": { "type": ["string", "null"] },
+        "duration": { "type": ["string", "null"] },
+        "reciprocal_item": { "type": ["string", "null"] },
+        "likelihood": { "type": "string", "enum": ["low", "medium", "high", "unknown"] },
+        "impact_severity": { "type": "string", "enum": ["low", "medium", "high", "unknown"] },
+        "evidence_refs": { "$ref": "#/$defs/evidenceRefs" }
+      }
+    },
+    "exception": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_id", "description", "stated_rationale", "scope", "duration", "authorized_by", "reviewed_by", "evidence_refs"],
+      "properties": {
+        "actor_id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "stated_rationale": { "type": ["string", "null"] },
+        "scope": { "type": ["string", "null"] },
+        "duration": { "type": ["string", "null"] },
+        "authorized_by": { "type": ["string", "null"] },
+        "reviewed_by": { "type": ["string", "null"] },
+        "evidence_refs": { "$ref": "#/$defs/evidenceRefs" }
+      }
+    },
+    "governanceFunction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defined", "actors", "criteria", "process", "recording", "reason_giving", "conflict_controls", "evidence_refs"],
+      "properties": {
+        "defined": { "type": "boolean" },
+        "actors": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "criteria": { "type": ["string", "null"] },
+        "process": { "type": ["string", "null"] },
+        "recording": { "type": ["string", "null"] },
+        "reason_giving": { "type": ["boolean", "null"] },
+        "conflict_controls": { "type": "array", "items": { "type": "string" } },
+        "evidence_refs": { "$ref": "#/$defs/evidenceRefs" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["issue_type", "display_level", "title", "description", "actor_ids", "rationale", "counter_interpretation", "questions", "confidence", "evidence_refs"],
+      "properties": {
+        "issue_type": {
+          "type": "string",
+          "enum": [
+            "asymmetric_burden",
+            "unilateral_privilege",
+            "missing_reciprocal_obligation",
+            "self_exemption",
+            "omitted_stakeholder",
+            "undefined_enforcement",
+            "conflict_of_interest",
+            "missing_appeal",
+            "ambiguous_scope",
+            "evidence_gap",
+            "cannot_assess"
+          ]
+        },
+        "display_level": { "type": "string", "enum": ["clear_issue_candidate", "needs_attention", "insufficient_information"] },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "actor_ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "rationale": { "type": "string", "minLength": 1 },
+        "counter_interpretation": { "type": ["string", "null"] },
+        "questions": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "evidence_refs": { "$ref": "#/$defs/evidenceRefs" }
+      }
+    },
+    "informationGap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question", "why_it_matters", "affected_fields"],
+      "properties": {
+        "question": { "type": "string", "minLength": 1 },
+        "why_it_matters": { "type": "string", "minLength": 1 },
+        "affected_fields": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "evidenceNeed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence", "purpose", "possible_source", "required_before_action"],
+      "properties": {
+        "evidence": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "possible_source": { "type": ["string", "null"] },
+        "required_before_action": { "type": "boolean" }
+      }
+    }
+  }
+}

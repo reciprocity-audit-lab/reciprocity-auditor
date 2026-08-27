@@ -1,0 +1,121 @@
+{
+  "name": "reciprocity-auditor-release-candidate",
+  "version": "0.1.0",
+  "release_status": "release_candidate",
+  "package_variant": "privacy_hardened",
+  "created_at": null,
+  "created_at_note": "Precise public package creation time intentionally omitted for privacy.",
+  "runtime": {
+    "python_version": "3.12.13",
+    "requires_python": ">=3.12",
+    "platform": "Windows PowerShell",
+    "third_party_python_dependencies": 0
+  },
+  "tests": {
+    "result": "PASS",
+    "framework": "unittest",
+    "tests_run": 24,
+    "failures": 0,
+    "errors": 0,
+    "golden_cases_loaded": 27
+  },
+  "minimum_flow": {
+    "result": "PASS",
+    "steps": [
+      "prepare",
+      "validate",
+      "render",
+      "review",
+      "status"
+    ],
+    "final_status": "reviewed",
+    "test_artifacts_in_release_candidate": false
+  },
+  "validation": {
+    "markdown_relative_links": "PASS",
+    "json_syntax": "PASS",
+    "jsonl_syntax": "PASS",
+    "toml_syntax": "PASS",
+    "powershell_syntax": "PASS",
+    "identity_secret_absolute_path_scan": "PASS",
+    "excluded_artifact_scan": "PASS",
+    "network_call_static_scan": "PASS"
+  },
+  "evaluation_record": {
+    "unique_cases": 9,
+    "perspectives": [
+      "Justice",
+      "Reversal",
+      "Tower"
+    ],
+    "evaluation_units": 27,
+    "reported_pass": 27,
+    "phase_3_3_axes": 11,
+    "phase_3_3_comparison_units": 99,
+    "phase_3_3_labels": {
+      "consistent": 37,
+      "complementary": 32,
+      "tension": 18,
+      "direct_conflict": 0,
+      "cannot_compare": 12
+    },
+    "high_priority_human_review_cases": 6,
+    "acceptable_for_release": 6,
+    "release_with_limitation": 0,
+    "blocking_issue": 0,
+    "human_review_decision_sha256": "d501968278760c61c9b9620ca47c8ac6d4c66f2d2b17dd1d97e749c467c1aca4",
+    "model_display_name": null,
+    "reasoning_setting": null,
+    "configuration_comparability": "not_demonstrated",
+    "phase_3_3_independent_human_evaluation": false
+  },
+  "included_file_count": 51,
+  "license": {
+    "spdx_id": "MIT",
+    "copyright": "Copyright (c) 2026 Reciprocity Auditor Contributors"
+  },
+  "source_immutability": {
+    "result": "PASS",
+    "unchanged": true,
+    "files_checked": 177,
+    "scope": "Phase 2 MVP, Phase 3.2 and Phase 3.3 artifacts, three evaluation-pack ZIPs, and three result ZIPs",
+    "before_composite_sha256": "c76ef0b8364b2590c3ad1306b07a6a14966e649520f4f616c72acb7d261e1826",
+    "after_composite_sha256": "c76ef0b8364b2590c3ad1306b07a6a14966e649520f4f616c72acb7d261e1826"
+  },
+  "activity_boundaries": {
+    "external_communication": false,
+    "network_access": false,
+    "api_use": false,
+    "git_contact": false,
+    "github_publication": false,
+    "technocore_contact": false,
+    "technocore_post": false,
+    "did_contact": false,
+    "wallet_contact": false,
+    "social_media_post": false
+  },
+  "known_limitations": [
+    "AI output does not replace human judgment or provide legal advice.",
+    "The MVP uses manual AI handoff and does not bundle a model or API integration.",
+    "Model display name and reasoning setting are unknown.",
+    "Configuration comparability was not demonstrated.",
+    "Phase 3.3 was not an independent human evaluation.",
+    "The 27/27 reported PASS result does not imply 100% general performance or audit accuracy.",
+    "Secret and identity pattern detection is defensive and not comprehensive.",
+    "Privacy-hardened packaging reduces incidental metadata exposure but does not provide network anonymity.",
+    "Publication services may retain account, IP, access-log, and upload-time data."
+  ],
+  "checksums": {
+    "algorithm": "SHA-256",
+    "file": "SHA256SUMS.txt",
+    "self_reference_excluded": true
+  },
+  "privacy_hardening": {
+    "zip_entry_timestamps": "normalized_to_1980-01-01T00:00:00",
+    "zip_comments": "absent",
+    "zip_extra_fields": "absent",
+    "example_and_fixture_timestamps": "synthetic_2000-01-01T00:00:00Z",
+    "precise_package_creation_time": "omitted",
+    "anonymity_guarantee": false
+  }
+}

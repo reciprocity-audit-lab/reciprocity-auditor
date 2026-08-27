@@ -1,0 +1,15 @@
+[project]
+name = "reciprocity-auditor"
+version = "0.1.0"
+description = "Offline manual-handoff MVP for structured reciprocity audits"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+dependencies = []
+
+[project.scripts]
+reciprocity-auditor = "reciprocity_auditor.cli:main"
+
+[tool.unittest]
+start-directory = "tests"
+

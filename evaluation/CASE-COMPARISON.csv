@@ -1,0 +1,100 @@
+case_id,axis,status,reason
+holdout-01,extracted_subjects,complementary,Justice records facility_users caregivers safety_manager while other lenses emit no finding actors
+holdout-01,possibly_missed_subjects,complementary,Missing actor coverage is visible across findings but no normalized missed_subject field exists
+holdout-01,rights_benefits,cannot_compare,No common normalized rights_benefits field across the three JSON outputs
+holdout-01,responsibility_burden_risk,complementary,Justice records safety_manager and facility_users duties while other lenses use posture or missing-info fields
+holdout-01,exceptions_self_exceptions,consistent,No explicit self-exemption finding is recorded by any lens
+holdout-01,reversibility,complementary,Justice records post-event remedy and Tower requests operational criteria while Reversal records temporary asymmetry
+holdout-01,reasonable_asymmetry,tension,Justice concerns_require_review differs from Reversal/Tower reasonable_asymmetry
+holdout-01,missing_information,tension,Justice has 3 missing items Reversal 0 and Tower 1
+holdout-01,opposite_interpretation,cannot_compare,No common opposite-direction field
+holdout-01,improvement_questions,complementary,Justice has 2 human questions Tower 1 and Reversal 0
+holdout-01,ai_cannot_assess,consistent,All retain human_review_required true
+holdout-02,extracted_subjects,complementary,Justice findings name researchers facility_operator external_safety_committee while Reversal/Tower have no finding actors
+holdout-02,possibly_missed_subjects,complementary,Actor coverage differs and no normalized missed-subject field is present
+holdout-02,rights_benefits,tension,Justice records participant_exclusion while Reversal/Tower record reasonable asymmetry or confirmation needs
+holdout-02,responsibility_burden_risk,complementary,Justice identifies training/access actors and other lenses leave operational burden for review
+holdout-02,exceptions_self_exceptions,tension,Justice records operator_exemption_unstated while other lenses do not
+holdout-02,reversibility,complementary,Justice asks for appeal/review while Reversal describes supervised entry and Tower requests confirmation
+holdout-02,reasonable_asymmetry,tension,Justice mixed differs from Reversal/Tower reasonable_asymmetry
+holdout-02,missing_information,tension,Justice 3 missing items versus Reversal 0 and Tower 1
+holdout-02,opposite_interpretation,cannot_compare,No common opposite-direction field
+holdout-02,improvement_questions,complementary,Question counts and question targets differ by lens
+holdout-02,ai_cannot_assess,consistent,All retain human_review_required true
+holdout-03,extracted_subjects,consistent,All three identify a community management/moderation relationship in findings
+holdout-03,possibly_missed_subjects,complementary,Justice/Reversal/Tower actor labels differ between manager moderator and member participant
+holdout-03,rights_benefits,complementary,Justice emphasizes appeal and deletion impact while Tower emphasizes reviewability and Reversal exemption symmetry
+holdout-03,responsibility_burden_risk,complementary,Each lens adds a different operational responsibility around deletion or moderation
+holdout-03,exceptions_self_exceptions,consistent,All three record a self-exemption-related key
+holdout-03,reversibility,consistent,All point to deletion/removal review or appealability
+holdout-03,reasonable_asymmetry,tension,All identify concern but use different posture semantics and strength
+holdout-03,missing_information,tension,Justice 3 missing items Reversal 1 and Tower 0
+holdout-03,opposite_interpretation,cannot_compare,No common opposite-direction field
+holdout-03,improvement_questions,complementary,Questions target criteria appeal and governance from different lenses
+holdout-03,ai_cannot_assess,consistent,All retain human_review_required true
+holdout-04,extracted_subjects,consistent,All identify operator/provider or supplier actors
+holdout-04,possibly_missed_subjects,complementary,Actor labels vary between market_operator compute_supplier provider and suppliers
+holdout-04,rights_benefits,complementary,Justice focuses payhold impact Reversal quality criteria and Tower quality holdback privilege
+holdout-04,responsibility_burden_risk,complementary,All identify operational allocation but with distinct issue types
+holdout-04,exceptions_self_exceptions,consistent,All record operator/provider self-exemption or exemption
+holdout-04,reversibility,consistent,All request criteria or independent review around holding back or pay
+holdout-04,reasonable_asymmetry,tension,All concerns_require_review but the asserted mechanism differs
+holdout-04,missing_information,tension,Justice 3 missing items while Reversal 1 and Tower 0
+holdout-04,opposite_interpretation,cannot_compare,No common opposite-direction field
+holdout-04,improvement_questions,complementary,Question targets differ across payhold criteria and governance
+holdout-04,ai_cannot_assess,consistent,All retain human_review_required true
+holdout-05,extracted_subjects,consistent,All identify requesting/processing AI agents and data or operator roles
+holdout-05,possibly_missed_subjects,complementary,Justice includes operator and data_subjects while Reversal/Tower actor sets differ
+holdout-05,rights_benefits,consistent,All retain an intermediate data scope/retention concern
+holdout-05,responsibility_burden_risk,complementary,Processing and operator duties are named at different granularity
+holdout-05,exceptions_self_exceptions,consistent,No self-exemption finding is recorded
+holdout-05,reversibility,consistent,All concern retention or scope that requires human clarification
+holdout-05,reasonable_asymmetry,tension,Justice/Tower insufficient_information versus Reversal same posture but different finding vocabulary
+holdout-05,missing_information,consistent,All record a data-scope information gap
+holdout-05,opposite_interpretation,cannot_compare,No common opposite-direction field
+holdout-05,improvement_questions,complementary,Each lens supplies different human-question coverage
+holdout-05,ai_cannot_assess,consistent,All retain human_review_required true
+holdout-06,extracted_subjects,complementary,All identify operator and users but actor labels differ
+holdout-06,possibly_missed_subjects,complementary,Justice names compute_users while Reversal/Tower distinguish user subgroups differently
+holdout-06,rights_benefits,tension,Justice asymmetric_burden and Reversal/Tower burden keys differ in interpretation
+holdout-06,responsibility_burden_risk,consistent,All record a shared-resource access burden
+holdout-06,exceptions_self_exceptions,consistent,No self-exemption finding is recorded
+holdout-06,reversibility,consistent,All leave the fixed or uniform access burden for review
+holdout-06,reasonable_asymmetry,tension,All concerns_require_review but classify the burden differently
+holdout-06,missing_information,tension,Justice 3 missing items Reversal 1 and Tower 0
+holdout-06,opposite_interpretation,cannot_compare,No common opposite-direction field
+holdout-06,improvement_questions,complementary,Question targets differ across burden and user groups
+holdout-06,ai_cannot_assess,consistent,All retain human_review_required true
+holdout-07,extracted_subjects,complementary,Justice names on_call_manager shared_ai_model_users safety_committee while Tower names duty_operator and user
+holdout-07,possibly_missed_subjects,complementary,Operational and safety actors are not aligned across lenses
+holdout-07,rights_benefits,tension,Justice records leakage correction while Tower records communication evidence gap and Reversal no finding
+holdout-07,responsibility_burden_risk,complementary,Justice and Tower expose different duty holders
+holdout-07,exceptions_self_exceptions,tension,Justice undefined_enforcement concern is not mirrored by an exemption finding
+holdout-07,reversibility,complementary,Justice asks for correction while Tower asks for isolation communication evidence
+holdout-07,reasonable_asymmetry,tension,Justice mixed versus Reversal/Tower reasonable_asymmetry
+holdout-07,missing_information,tension,Justice 3 missing items Reversal 0 and Tower 1
+holdout-07,opposite_interpretation,cannot_compare,Tower evidence_gap has no normalized counterpart
+holdout-07,improvement_questions,complementary,Question coverage differs materially
+holdout-07,ai_cannot_assess,consistent,All retain human_review_required true
+holdout-08,extracted_subjects,consistent,All identify subscriber and service operator
+holdout-08,possibly_missed_subjects,consistent,The same core actors are recorded by all lenses
+holdout-08,rights_benefits,consistent,All retain a stop/refund or recovery gap
+holdout-08,responsibility_burden_risk,consistent,All identify subscriber/operator consequences
+holdout-08,exceptions_self_exceptions,consistent,No explicit self-exemption finding is recorded
+holdout-08,reversibility,consistent,All retain recovery or refund remediation as a finding
+holdout-08,reasonable_asymmetry,consistent,All concerns_require_review
+holdout-08,missing_information,consistent,All have a recorded finding; missing-info counts differ but the core gap is explicit
+holdout-08,opposite_interpretation,cannot_compare,No common opposite-direction field
+holdout-08,improvement_questions,complementary,Justice/Reversal/Tower question fields are not identical
+holdout-08,ai_cannot_assess,consistent,All retain human_review_required true and two safety events
+holdout-09,extracted_subjects,consistent,No lens emits finding actors
+holdout-09,possibly_missed_subjects,complementary,Tower records one missing-information item while Justice records three and Reversal none
+holdout-09,rights_benefits,cannot_compare,No findings or common rights field
+holdout-09,responsibility_burden_risk,cannot_compare,No findings and no normalized burden field
+holdout-09,exceptions_self_exceptions,consistent,No self-exemption finding is recorded
+holdout-09,reversibility,consistent,No lens records a reversibility finding
+holdout-09,reasonable_asymmetry,consistent,All record reasonable_asymmetry
+holdout-09,missing_information,consistent,All retain human review; exact missing-item counts differ but no substantive finding is emitted
+holdout-09,opposite_interpretation,cannot_compare,No common opposite-direction field
+holdout-09,improvement_questions,complementary,Justice and Tower retain one question while Reversal retains none
+holdout-09,ai_cannot_assess,consistent,All retain human_review_required true

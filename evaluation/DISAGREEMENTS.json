@@ -1,0 +1,19 @@
+{
+  "phase": "3.3",
+  "scope": {"cases": 9, "evaluation_units": 27, "comparison_units": 99, "unit": "case x comparison_axis"},
+  "labels": {"consistent": 37, "complementary": 32, "tension": 18, "direct_conflict": 0, "cannot_compare": 12},
+  "direct_conflicts": [],
+  "tensions": [
+    {"cases":["holdout-01","holdout-02","holdout-07"],"issue":"posture_or_asymmetry","reason":"Justice records concern/mixed or enforcement concern while Reversal and/or Tower record reasonable_asymmetry; this is a lens difference, not a direct conflict."},
+    {"cases":["holdout-03","holdout-04"],"issue":"self_exemption_and_operator_scope","reason":"The perspectives use different actor sets and issue types for closely related operator/manager exemption concerns."},
+    {"cases":["holdout-05","holdout-06"],"issue":"scope_and_burden","reason":"All perspectives identify a related data or access burden, but actor names and missing-information fields differ."},
+    {"cases":["holdout-08"],"issue":"recovery_and_refund","reason":"Justice, Reversal, and Tower all retain a stop/refund or recovery-gap finding, while their issue-type vocabulary differs; safety events are present in all three."}
+  ],
+  "cannot_compare": [
+    {"cases":["holdout-01","holdout-02","holdout-09"],"issue":"opposite_interpretation","reason":"The source JSON does not provide a normalized opposite-direction interpretation field across all three lenses."},
+    {"cases":["holdout-07"],"issue":"evidence_gap_vs_cannot_assess","reason":"Tower has an evidence_gap finding while the other lenses do not expose an equivalent normalized field; no reclassification was made."},
+    {"cases":["holdout-09"],"issue":"rights_benefits_and_burden","reason":"No findings were emitted by any lens, so substantive comparison is unavailable from the recorded outputs."}
+  ],
+  "not_a_rescoring": true,
+  "source_results_unchanged": true
+}
