@@ -20,6 +20,8 @@ The privacy-hardened distribution normalizes ZIP entry timestamps, removes preci
 
 Runtime-generated case files intentionally record operational timestamps. Keep them out of a public package unless they have been reviewed and intentionally sanitized.
 
+The `export-public` command can create a reviewed, privacy-hardened case copy. It normalizes known operational timestamp fields, omits runtime state and event logs, scans exported text for absolute user-profile paths and common secret formats, and generates a manifest and checksums. A blocking finding aborts the export without leaving the destination directory. This pattern-based scan is a safety aid, not a guarantee of anonymity or complete secret detection.
+
 ## No automated external action
 
 Input text cannot authorize network access, file discovery outside the chosen local paths, posting, signing, DID operations, wallet operations, or execution of embedded instructions. The release contains no integration for these actions.
