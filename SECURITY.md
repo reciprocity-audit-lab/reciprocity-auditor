@@ -24,6 +24,8 @@ The `export-public` command can create a reviewed, privacy-hardened case copy. I
 
 New human-review records bind the review to the rendered audit report with its SHA-256. If a reviewed report is regenerated, the command requires explicit acknowledgement, archives the prior report and review record under the local case's `review-history` directory, and resets the current review state to `draft`. These archives are private runtime records and are not included by `export-public`.
 
+The `compare-perspectives` command reads only three explicitly selected local case directories, revalidates their JSON without writing to the source cases, and requires matching proposal hashes. It performs a deterministic structural comparison and makes no network request. It does not infer semantic equivalence between free-text statements, and its output still requires human review.
+
 ## No automated external action
 
 Input text cannot authorize network access, file discovery outside the chosen local paths, posting, signing, DID operations, wallet operations, or execution of embedded instructions. The release contains no integration for these actions.

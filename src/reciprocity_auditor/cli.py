@@ -5,6 +5,7 @@ import sys
 import unittest
 from pathlib import Path
 
+from .comparison import compare_perspectives
 from .errors import AuditorError
 from .io_utils import project_root, read_case
 from .packet import prepare_case
@@ -26,6 +27,12 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--input", type=Path, required=True, help="UTF-8提案ファイル")
     prepare.add_argument("--output", type=Path, required=True, help="新規ケースフォルダ")
     prepare.add_argument("--case-id", help="省略時は出力フォルダ名")
+    prepare.add_argument(
+        "--perspective",
+        choices=("general", "justice", "reversal", "tower"),
+        default="general",
+        help="分析の焦点。省略時はgeneral",
+    )
 
     validate = commands.add_parser("validate", help="手動保存したAI回答JSONを検証")
     validate.add_argument("--input", type=Path, required=True, help="ケース内のanalysis.json")
@@ -54,6 +61,12 @@ def build_parser() -> argparse.ArgumentParser:
     export_public.add_argument("--output", type=Path, required=True, help="新規公開用フォルダ")
     export_public.add_argument("--zip", type=Path, help="任意の決定的ZIP出力先")
 
+    compare = commands.add_parser("compare-perspectives", help="Justice・Reversal・Towerを決定的に横断比較")
+    compare.add_argument("--justice", type=Path, required=True, help="Justiceケースフォルダ")
+    compare.add_argument("--reversal", type=Path, required=True, help="Reversalケースフォルダ")
+    compare.add_argument("--tower", type=Path, required=True, help="Towerケースフォルダ")
+    compare.add_argument("--output", type=Path, required=True, help="新規比較結果フォルダ")
+
     commands.add_parser("test", help="ローカルunittestを実行")
     return parser
 
@@ -74,10 +87,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "prepare":
-            result = prepare_case(args.input, args.output, requested_case_id=args.case_id)
+            result = prepare_case(
+                args.input,
+                args.output,
+                requested_case_id=args.case_id,
+                perspective=args.perspective,
+            )
             print("prepare: 完了")
             print(f"case_id: {result['case_id']}")
             print(f"proposal_sha256: {result['proposal_sha256']}")
+            print(f"perspective: {result['perspective']}")
             print("state: AI回答待ち")
             if result["flags"]:
                 print("notice: 未信頼入力の注意フラグを記録しました。内容は実行していません。")
@@ -154,6 +173,20 @@ def main(argv: list[str] | None = None) -> int:
             if result.zip_path is not None:
                 print(f"zip: {result.zip_path.name}")
                 print(f"zip_sha256: {result.zip_sha256}")
+            return 0
+
+        if args.command == "compare-perspectives":
+            result = compare_perspectives(
+                justice_case=args.justice,
+                reversal_case=args.reversal,
+                tower_case=args.tower,
+                output_dir=args.output,
+            )
+            print("compare-perspectives: 完了")
+            print(f"output: {result.output_dir.name}")
+            for status in ("consistent", "complementary", "tension", "direct_conflict", "cannot_compare"):
+                print(f"{status}: {result.summary[status]}")
+            print("meaning: 構造的比較であり、公平性・適法性・採否・処罰の最終判断ではありません。")
             return 0
 
         if args.command == "test":

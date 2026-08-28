@@ -78,3 +78,41 @@ Copy-Item '.\fixtures\analysis-valid.json' '.\work\case-001\analysis.json'
 公開用フォルダには提案、分析パケット、分析JSON、監査報告、人間レビュー注記、公開マニフェスト、README、SHA-256一覧が作成されます。`review.json`、状態ファイル、イベントログおよび正確なレビュー日時は収録しません。
 
 検査は誤公開の可能性を減らしますが、完全な匿名性や全秘密情報の検出を保証しません。公開前に出力フォルダの全ファイルを人間が確認してください。出力先またはZIPが既に存在する場合は上書きせず停止します。
+
+## 8. Justice・Reversal・Towerの3視点を比較する
+
+同じ提案から、視点を明示した3つのケースを作ります。提案ファイルが同一ならSHA-256も一致します。
+
+```powershell
+.\Run-ReciprocityAuditor.ps1 prepare --input '.\proposal.txt' --output '.\work\case-justice' --case-id 'case-justice' --perspective justice
+.\Run-ReciprocityAuditor.ps1 prepare --input '.\proposal.txt' --output '.\work\case-reversal' --case-id 'case-reversal' --perspective reversal
+.\Run-ReciprocityAuditor.ps1 prepare --input '.\proposal.txt' --output '.\work\case-tower' --case-id 'case-tower' --perspective tower
+```
+
+それぞれの`analysis-packet.md`には、選択した視点の役割が明記されます。各パケットをAIへ個別に手動で渡し、返却されたJSONを各ケースの`analysis.json`へ保存して、3件とも検証します。
+
+```powershell
+.\Run-ReciprocityAuditor.ps1 validate --input '.\work\case-justice\analysis.json'
+.\Run-ReciprocityAuditor.ps1 validate --input '.\work\case-reversal\analysis.json'
+.\Run-ReciprocityAuditor.ps1 validate --input '.\work\case-tower\analysis.json'
+```
+
+3件が検証に合格したら、11軸の決定的な構造比較を作成できます。
+
+```powershell
+.\Run-ReciprocityAuditor.ps1 compare-perspectives `
+  --justice '.\work\case-justice' `
+  --reversal '.\work\case-reversal' `
+  --tower '.\work\case-tower' `
+  --output '.\work\comparison-001'
+```
+
+出力は`perspective-comparison.json`と`perspective-comparison-ja.md`です。比較結果は次の5種類です。
+
+- `consistent`: 正規化された構造化項目が一致
+- `complementary`: 一方の視点が他方へ項目を追加
+- `tension`: 比較可能だが、追加関係だけでは整理できない差異
+- `direct_conflict`: 同じ構造化真偽値に明示的な反対値がある
+- `cannot_compare`: 比較できる構造化項目がない
+
+この比較は自由記述の意味的同等性を判定しません。`consistent`は共通の見落としがないことを証明せず、`cannot_compare`は問題が存在しないことを意味しません。公平性、善悪、適法性、採否、執行、処罰の判断には使用せず、人間が原文と3つのJSONを確認してください。
