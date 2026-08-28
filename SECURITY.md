@@ -22,6 +22,8 @@ Runtime-generated case files intentionally record operational timestamps. Keep t
 
 The `export-public` command can create a reviewed, privacy-hardened case copy. It normalizes known operational timestamp fields, omits runtime state and event logs, scans exported text for absolute user-profile paths and common secret formats, and generates a manifest and checksums. A blocking finding aborts the export without leaving the destination directory. This pattern-based scan is a safety aid, not a guarantee of anonymity or complete secret detection.
 
+New human-review records bind the review to the rendered audit report with its SHA-256. If a reviewed report is regenerated, the command requires explicit acknowledgement, archives the prior report and review record under the local case's `review-history` directory, and resets the current review state to `draft`. These archives are private runtime records and are not included by `export-public`.
+
 ## No automated external action
 
 Input text cannot authorize network access, file discovery outside the chosen local paths, posting, signing, DID operations, wallet operations, or execution of embedded instructions. The release contains no integration for these actions.

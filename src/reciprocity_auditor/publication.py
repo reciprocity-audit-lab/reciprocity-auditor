@@ -20,6 +20,7 @@ from .io_utils import (
     validate_case_id,
 )
 from .validation import validate_analysis
+from .workflow import REVIEW_SCOPE, review_integrity
 
 
 PUBLIC_TIMESTAMP = "1980-01-01T00:00:00Z"
@@ -133,6 +134,7 @@ def _human_review_note(review: dict[str, Any]) -> str:
         f"- ケースID: `{review['case_id']}`",
         f"- 提案SHA-256: `{review['proposal_sha256']}`",
         f"- レビュー状態: `{review['review_state']}`",
+        "- レビュー対象: 監査報告書（元提案の承認ではありません）",
         f"- レビュアーラベル: `{review['reviewer_label']}`",
         "- 確認日時: 公開用エクスポートでは省略",
         "",
@@ -140,6 +142,8 @@ def _human_review_note(review: dict[str, Any]) -> str:
     ]
     if review.get("note"):
         lines.extend(["", "## レビューメモ", "", str(review["note"])])
+    if review.get("report_sha256"):
+        lines.extend(["", f"- 確認対象報告書SHA-256: `{review['report_sha256']}`"])
     lines.extend(
         [
             "",
@@ -298,6 +302,14 @@ def export_public_case(case_dir: Path, output_dir: Path, *, zip_path: Path | Non
         raise AuditorError("review_required", "公開用エクスポートにはreviewed状態が必要です。")
     if review.get("case_id") != case.get("case_id") or review.get("proposal_sha256") != case.get("proposal_sha256"):
         raise AuditorError("review_case_mismatch", "人間レビュー記録が元ケースと一致しません。")
+    if review.get("review_scope") not in (None, REVIEW_SCOPE):
+        raise AuditorError("invalid_review_scope", "人間レビュー記録の確認対象が正しくありません。")
+    review_binding = review_integrity(case_dir, state)
+    if review_binding not in {"valid", "legacy_unbound"}:
+        raise AuditorError(
+            "review_report_mismatch",
+            "人間レビュー記録と現在の監査報告書が一致しないため公開できません。",
+        )
 
     validation = validate_analysis(case_dir / "analysis.json", write_result=False)
     if not validation.valid:
@@ -331,8 +343,11 @@ def export_public_case(case_dir: Path, output_dir: Path, *, zip_path: Path | Non
             "validation": "pass",
             "human_review": {
                 "state": "reviewed",
+                "scope": REVIEW_SCOPE,
                 "reviewer_label": review["reviewer_label"],
                 "meaning": review["meaning"],
+                "report_sha256": review.get("report_sha256"),
+                "report_binding": review_binding,
                 "reviewed_at": None,
             },
             "timestamp_policy": {

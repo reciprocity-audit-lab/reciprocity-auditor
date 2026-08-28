@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from .errors import AuditorError
-from .io_utils import project_root
+from .io_utils import project_root, read_case
 from .packet import prepare_case
 from .publication import export_public_case
 from .rendering import render_analysis
@@ -34,6 +34,11 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--input", type=Path, required=True, help="ケース内のanalysis.json")
     render.add_argument("--output", type=Path, help="ケース内の出力ファイル")
     render.add_argument("--force", action="store_true", help="既存報告書を意図的に再生成")
+    render.add_argument(
+        "--acknowledge-review-reset",
+        action="store_true",
+        help="確認済み報告書の再生成で人間確認がdraftへ戻ることを明示確認",
+    )
 
     review = commands.add_parser("review", help="監査報告の人間確認状態を記録")
     review.add_argument("--case", type=Path, required=True, help="ケースフォルダ")
@@ -91,10 +96,24 @@ def main(argv: list[str] | None = None) -> int:
             return 2
 
         if args.command == "render":
-            destination = render_analysis(args.input, args.output, force=args.force)
+            _, state_before = read_case(args.input.parent)
+            was_reviewed = state_before.get("review_status") == "reviewed"
+            if was_reviewed:
+                print(
+                    "WARNING: reviewedは監査報告書の確認状態です。再生成するとdraftへ戻り、以前の記録は履歴へ保存されます。",
+                    file=sys.stderr,
+                )
+            destination = render_analysis(
+                args.input,
+                args.output,
+                force=args.force,
+                acknowledge_review_reset=args.acknowledge_review_reset,
+            )
             print("render: 完了")
             print(f"output: {destination.name}")
             print("state: 人間確認待ち")
+            if was_reviewed:
+                print("previous_review: review-historyへ保存")
             return 0
 
         if args.command == "review":
@@ -119,6 +138,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"JSON検証: {status_value['validation']}")
             print(f"報告書: {status_value['report']}")
             print(f"人間確認: {status_value['human_review']}")
+            print("人間確認対象: 監査報告書（元提案の承認ではありません）")
+            print(f"レビュー整合性: {status_value['review_integrity']}")
             print(f"現在状態: {status_value['current']}")
             return 0
 

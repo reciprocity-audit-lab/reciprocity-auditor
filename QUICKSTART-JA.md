@@ -41,6 +41,21 @@ Copy-Item '.\fixtures\analysis-valid.json' '.\work\case-001\analysis.json'
 
 `work\case-001\audit-report-ja.md`を人間が確認します。`reviewed`は監査報告を確認したという意味で、元の契約案やルール案を承認したという意味ではありません。
 
+`status`は、人間確認の対象が監査報告書であることと、確認記録が現在の報告書に対応しているかを表示します。新しく記録するレビューには、確認対象報告書のSHA-256が保存されます。
+
+### 確認済み報告書を再生成する場合
+
+`reviewed`状態の報告書は、`--force`だけでは再生成できません。以前の人間確認が`draft`へ戻ることを明示的に確認してください。
+
+```powershell
+.\Run-ReciprocityAuditor.ps1 render `
+  --input '.\work\case-001\analysis.json' `
+  --force `
+  --acknowledge-review-reset
+```
+
+再生成前の`review.json`と監査報告書は、ケース内の`review-history\`へ連番で保存されます。再生成後は人間確認待ちに戻るため、新しい報告書を読み直してから`review`を再実行してください。履歴はローカル運用記録であり、公開用エクスポートには含まれません。
+
 ## 6. テスト
 
 ```powershell

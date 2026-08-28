@@ -4,8 +4,18 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .errors import AuditorError
-from .io_utils import append_event, atomic_write_text, read_case, update_state, utc_now
+from .io_utils import (
+    append_event,
+    atomic_write_text,
+    load_json,
+    read_case,
+    sha256_file,
+    update_state,
+    utc_now,
+    write_new_bytes,
+)
 from .validation import validate_analysis
+from .workflow import report_file_from_state, review_integrity
 
 
 LEVEL_LABELS = {
@@ -13,6 +23,66 @@ LEVEL_LABELS = {
     "needs_attention": "注意・追加確認が必要",
     "insufficient_information": "情報不足で判断不能",
 }
+REVIEW_HISTORY_DIR = "review-history"
+
+
+def _archive_review_context(case_dir: Path, state: dict[str, Any]) -> tuple[Path, Path | None] | None:
+    review_path = case_dir / "review.json"
+    if not review_path.exists():
+        return None
+    if not review_path.is_file() or review_path.is_symlink():
+        raise AuditorError("invalid_review_file", "現在の人間レビュー記録が正しくありません。")
+
+    review = load_json(review_path)
+    if not isinstance(review, dict):
+        raise AuditorError("invalid_review_file", "現在の人間レビュー記録が正しくありません。")
+    report_file = review.get("report_file", report_file_from_state(state))
+    if not isinstance(report_file, str) or not report_file or Path(report_file).name != report_file:
+        raise AuditorError("invalid_review_file", "レビュー対象の監査報告書名が正しくありません。")
+    reviewed_report = case_dir / report_file
+    if reviewed_report.exists() and (not reviewed_report.is_file() or reviewed_report.is_symlink()):
+        raise AuditorError("invalid_reviewed_report", "レビュー対象の監査報告書が正しくありません。")
+
+    history_dir = case_dir / REVIEW_HISTORY_DIR
+    if history_dir.exists() or history_dir.is_symlink():
+        if not history_dir.is_dir() or history_dir.is_symlink():
+            raise AuditorError("unsafe_review_history", "レビュー履歴フォルダが安全な通常フォルダではありません。")
+    else:
+        history_dir.mkdir(parents=False, exist_ok=False)
+    index = 1
+    while True:
+        archived_review = history_dir / f"review-{index:04d}.json"
+        archived_report = history_dir / f"audit-report-{index:04d}.md"
+        if archived_review.is_symlink() or archived_report.is_symlink():
+            raise AuditorError("unsafe_review_history", "レビュー履歴にシンボリックリンクは使用できません。")
+        if not archived_review.exists() and not archived_report.exists():
+            break
+        index += 1
+
+    write_new_bytes(archived_review, review_path.read_bytes())
+    report_archive: Path | None = None
+    try:
+        if reviewed_report.is_file():
+            write_new_bytes(archived_report, reviewed_report.read_bytes())
+            report_archive = archived_report
+    except Exception:
+        archived_review.unlink(missing_ok=True)
+        raise
+    return archived_review, report_archive
+
+
+def _discard_failed_archive(archive: tuple[Path, Path | None] | None) -> None:
+    if archive is None:
+        return
+    archived_review, archived_report = archive
+    archived_review.unlink(missing_ok=True)
+    if archived_report is not None:
+        archived_report.unlink(missing_ok=True)
+    history_dir = archived_review.parent
+    try:
+        history_dir.rmdir()
+    except OSError:
+        pass
 
 
 def _text(value: Any, default: str = "明記なし") -> str:
@@ -292,7 +362,13 @@ def render_markdown(data: dict[str, Any], *, case_id: str, proposal_sha256: str)
     return "\n".join(lines)
 
 
-def render_analysis(input_path: Path, output_path: Path | None = None, *, force: bool = False) -> Path:
+def render_analysis(
+    input_path: Path,
+    output_path: Path | None = None,
+    *,
+    force: bool = False,
+    acknowledge_review_reset: bool = False,
+) -> Path:
     result = validate_analysis(input_path, write_result=True)
     if not result.valid or result.data is None:
         code = result.findings[0].code if result.findings else "validation_failed"
@@ -305,14 +381,51 @@ def render_analysis(input_path: Path, output_path: Path | None = None, *, force:
     if destination.exists() and not force:
         raise AuditorError("report_exists", "報告書が既にあります。再生成には--forceを指定してください。")
 
+    case, state = read_case(case_dir)
+    was_reviewed = state.get("review_status") == "reviewed"
+    if was_reviewed:
+        integrity = review_integrity(case_dir, state)
+        if integrity not in {"valid", "legacy_unbound"}:
+            raise AuditorError(
+                "review_integrity_failed",
+                "確認済み報告書とレビュー記録が一致しません。再生成前に人間が状態を確認してください。",
+            )
+        if not acknowledge_review_reset:
+            raise AuditorError(
+                "reviewed_report_requires_acknowledgement",
+                "この監査報告書はreviewedです。再生成すると現在の人間確認はdraftへ戻ります。"
+                "続行するには--acknowledge-review-resetを指定してください。",
+            )
+
     markdown = render_markdown(
         result.data,
         case_id=result.case_id,
         proposal_sha256=result.proposal_sha256,
     )
-    atomic_write_text(destination, markdown)
-    case, state = read_case(case_dir)
-    update_state(case_dir, state, report_status="generated", review_status="draft")
+    archive = _archive_review_context(case_dir, state)
+    try:
+        atomic_write_text(destination, markdown)
+    except Exception:
+        _discard_failed_archive(archive)
+        raise
+
+    update_state(
+        case_dir,
+        state,
+        report_status="generated",
+        report_file=destination.name,
+        report_sha256=sha256_file(destination),
+        review_status="draft",
+    )
+    if archive is not None:
+        (case_dir / "review.json").unlink(missing_ok=True)
+        append_event(
+            case_dir,
+            case_id=case["case_id"],
+            proposal_sha256=case["proposal_sha256"],
+            event="review_archived",
+            state="draft",
+        )
     append_event(
         case_dir,
         case_id=case["case_id"],
