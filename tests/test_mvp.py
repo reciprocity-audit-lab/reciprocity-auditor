@@ -267,8 +267,97 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
         self.assertEqual("人間確認待ち", case_status(case_dir)["current"])
         review = record_review(case_dir, "reviewed", reviewer_label="reviewer-1")
         self.assertEqual("reviewed", review["review_state"])
+        self.assertEqual("audit_report", review["review_scope"])
+        self.assertEqual("audit-report-ja.md", review["report_file"])
+        self.assertEqual(
+            hashlib.sha256((case_dir / "audit-report-ja.md").read_bytes()).hexdigest(),
+            review["report_sha256"],
+        )
         self.assertIn("元の提案の採択・承認ではありません", review["meaning"])
         self.assertEqual("reviewed", case_status(case_dir)["current"])
+        self.assertEqual("valid", case_status(case_dir)["review_integrity"])
+
+    def test_reviewed_report_regeneration_requires_explicit_acknowledgement(self) -> None:
+        case_dir = self._reviewed_case(case_id="review-reset-case")
+        report_before = (case_dir / "audit-report-ja.md").read_bytes()
+        review_before = (case_dir / "review.json").read_bytes()
+
+        with self.assertRaisesRegex(AuditorError, "acknowledge-review-reset"):
+            render_analysis(case_dir / "analysis.json", force=True)
+
+        self.assertEqual(report_before, (case_dir / "audit-report-ja.md").read_bytes())
+        self.assertEqual(review_before, (case_dir / "review.json").read_bytes())
+        self.assertFalse((case_dir / "review-history").exists())
+        self.assertEqual("reviewed", case_status(case_dir)["current"])
+
+    def test_acknowledged_regeneration_archives_review_and_resets_state(self) -> None:
+        case_dir = self._reviewed_case(case_id="review-archive-case")
+        report_before = (case_dir / "audit-report-ja.md").read_bytes()
+        review_before = (case_dir / "review.json").read_bytes()
+
+        render_analysis(
+            case_dir / "analysis.json",
+            force=True,
+            acknowledge_review_reset=True,
+        )
+
+        history = case_dir / "review-history"
+        self.assertEqual(report_before, (history / "audit-report-0001.md").read_bytes())
+        self.assertEqual(review_before, (history / "review-0001.json").read_bytes())
+        self.assertFalse((case_dir / "review.json").exists())
+        state = json.loads((case_dir / "state.json").read_text(encoding="utf-8"))
+        self.assertEqual("draft", state["review_status"])
+        self.assertEqual("audit-report-ja.md", state["report_file"])
+        self.assertEqual(
+            hashlib.sha256((case_dir / "audit-report-ja.md").read_bytes()).hexdigest(),
+            state["report_sha256"],
+        )
+        status = case_status(case_dir)
+        self.assertEqual("人間確認待ち", status["current"])
+        self.assertEqual("not_applicable", status["review_integrity"])
+
+    def test_regenerated_report_can_be_reviewed_again_without_losing_history(self) -> None:
+        case_dir = self._reviewed_case(case_id="review-again-case")
+        first_review = (case_dir / "review.json").read_bytes()
+        render_analysis(
+            case_dir / "analysis.json",
+            force=True,
+            acknowledge_review_reset=True,
+        )
+
+        second_review = record_review(case_dir, "reviewed", reviewer_label="reviewer-2")
+
+        self.assertEqual("reviewer-2", second_review["reviewer_label"])
+        self.assertEqual("valid", case_status(case_dir)["review_integrity"])
+        self.assertEqual(first_review, (case_dir / "review-history" / "review-0001.json").read_bytes())
+
+    def test_review_history_rejects_symlinked_directory(self) -> None:
+        case_dir = self._reviewed_case(case_id="review-history-link")
+        outside = self.temp_root / "outside-history"
+        outside.mkdir()
+        history = case_dir / "review-history"
+        try:
+            history.symlink_to(outside, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("directory symlinks are unavailable in this environment")
+
+        with self.assertRaisesRegex(AuditorError, "履歴フォルダ"):
+            render_analysis(
+                case_dir / "analysis.json",
+                force=True,
+                acknowledge_review_reset=True,
+            )
+        self.assertTrue((case_dir / "review.json").is_file())
+        self.assertEqual("reviewed", case_status(case_dir)["current"])
+
+    def test_status_detects_report_changed_after_review(self) -> None:
+        case_dir = self._reviewed_case(case_id="changed-report-case")
+        with (case_dir / "audit-report-ja.md").open("a", encoding="utf-8") as stream:
+            stream.write("\nchanged after review\n")
+
+        status = case_status(case_dir)
+        self.assertEqual("reviewed_report_changed", status["review_integrity"])
+        self.assertEqual("人間確認記録不整合", status["current"])
 
     def test_approved_review_state_is_not_allowed(self) -> None:
         case_dir = self.prepare()
@@ -383,6 +472,7 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
         case_dir = self._reviewed_case()
         with (case_dir / "audit-report-ja.md").open("a", encoding="utf-8") as stream:
             stream.write("\ncontact: person" + "@" + "example.com\n")
+        record_review(case_dir, "reviewed", reviewer_label="reviewer-2")
         output = self.temp_root / "blocked-output"
         with self.assertRaisesRegex(AuditorError, "公開を妨げる"):
             export_public_case(case_dir, output)
@@ -416,6 +506,46 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(AuditorError, "レビュー記録"):
             export_public_case(case_dir, self.temp_root / "blocked-output")
+
+    def test_export_public_rejects_report_changed_after_review(self) -> None:
+        case_dir = self._reviewed_case(case_id="publication-changed-report")
+        with (case_dir / "audit-report-ja.md").open("a", encoding="utf-8") as stream:
+            stream.write("\nchanged after review\n")
+        with self.assertRaisesRegex(AuditorError, "現在の監査報告書"):
+            export_public_case(case_dir, self.temp_root / "blocked-output")
+        self.assertFalse((self.temp_root / "blocked-output").exists())
+
+    def test_cli_reviewed_render_warns_and_requires_acknowledgement(self) -> None:
+        case_dir = self._reviewed_case(case_id="cli-review-reset")
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            exit_code = main(
+                [
+                    "render",
+                    "--input",
+                    str(case_dir / "analysis.json"),
+                    "--force",
+                ]
+            )
+        self.assertEqual(2, exit_code)
+        self.assertIn("WARNING", stderr.getvalue())
+        self.assertIn("acknowledge-review-reset", stderr.getvalue())
+
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            exit_code = main(
+                [
+                    "render",
+                    "--input",
+                    str(case_dir / "analysis.json"),
+                    "--force",
+                    "--acknowledge-review-reset",
+                ]
+            )
+        self.assertEqual(0, exit_code)
+        self.assertIn("previous_review: review-historyへ保存", stdout.getvalue())
+        self.assertIn("WARNING", stderr.getvalue())
 
     def test_export_public_rejects_unsafe_tampered_case_id(self) -> None:
         case_dir = self._reviewed_case()
