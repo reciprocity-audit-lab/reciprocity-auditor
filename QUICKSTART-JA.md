@@ -116,3 +116,45 @@ Copy-Item '.\fixtures\analysis-valid.json' '.\work\case-001\analysis.json'
 - `cannot_compare`: 比較できる構造化項目がない
 
 この比較は自由記述の意味的同等性を判定しません。`consistent`は共通の見落としがないことを証明せず、`cannot_compare`は問題が存在しないことを意味しません。公平性、善悪、適法性、採否、執行、処罰の判断には使用せず、人間が原文と3つのJSONを確認してください。
+
+## 9. 実行構成と比較レビューを記録する
+
+AI回答を得たとき、モデル表示名または推論設定を画面や実行マニフェストで明示的に確認できた場合だけ記録します。推測値は禁止です。
+
+```powershell
+.\Run-ReciprocityAuditor.ps1 record-run-config `
+  --case '.\work\case-justice' `
+  --evidence-source model_ui `
+  --model-display-name '画面に表示された名前' `
+  --reasoning-setting '画面に表示された設定'
+```
+
+確認できなかった場合は、値を補わず`unavailable`を記録します。
+
+```powershell
+.\Run-ReciprocityAuditor.ps1 record-run-config `
+  --case '.\work\case-justice' `
+  --evidence-source unavailable
+```
+
+記録は`analysis.json`のSHA-256へ結び付けられます。記録後に分析JSONが変わった場合、3視点比較は停止します。3視点すべての表示名と推論設定が一致しても、比較出力は「記録された項目が一致」とだけ表示し、未記録設定を含む完全な構成比較可能性は`not_demonstrated`のままです。
+
+3視点比較を確認した人は、匿名ラベルでレビューを記録できます。同じ比較に複数のレビューを追加できます。
+
+```powershell
+.\Run-ReciprocityAuditor.ps1 review-comparison `
+  --comparison '.\work\comparison-001' `
+  --state reviewed `
+  --reviewer-label 'reviewer-independent-1' `
+  --independence independent `
+  --independence-basis '生成と比較に参加していない別の人間が確認'
+
+.\Run-ReciprocityAuditor.ps1 comparison-review-status `
+  --comparison '.\work\comparison-001'
+```
+
+`independent`は、生成や比較を担当していない別の人間が確認した場合にだけ使用してください。同じ人が生成・比較・確認した場合は`not_independent`、確認できない場合は`unknown`です。独立性は担当者による自己申告であり、ツールが身元や作業分離を外部証拠で検証するものではありません。
+
+比較レビューは比較JSONとMarkdownのSHA-256へ結び付けられます。比較結果が変更されると、`comparison-review-status`は以前のレビューを有効な確認として数えません。この記録は比較結果の確認であり、元提案や各監査報告の承認ではありません。
+
+固定評価シナリオは`fixtures/evaluation-scenarios.json`にあります。不足情報、合理的な非対称性、利益相反、未定義の執行の4種類を収録しています。これは回帰確認用の小規模fixtureであり、一般的な監査精度や完全な公平性を示しません。

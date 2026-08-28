@@ -64,6 +64,16 @@ The five comparison labels are `consistent`, `complementary`, `tension`, `direct
 
 See [`QUICKSTART-JA.md`](QUICKSTART-JA.md) for the complete Windows commands.
 
+## Evaluation records
+
+`record-run-config` binds only explicitly observed model display names and reasoning settings to the SHA-256 of a validated analysis. If a value was unavailable, the record preserves `null`; the tool does not infer it.
+
+Even when all recorded display names and reasoning settings match, full configuration comparability remains `not_demonstrated` because unrecorded settings may differ. The comparison reports the narrower relationship separately as `recorded_fields_match`, `recorded_fields_differ`, or `incomplete`.
+
+`review-comparison` supports multiple hash-bound human review records using anonymous labels. Reviewer independence is recorded as the self-attested value `independent`, `not_independent`, or `unknown`; the tool does not verify identity or organizational independence.
+
+[`fixtures/evaluation-scenarios.json`](fixtures/evaluation-scenarios.json) covers missing information, justified asymmetry, conflicts of interest, and undefined enforcement. These small regression fixtures do not establish general audit accuracy. Positive results continue to be reported with limitations.
+
 ## Evaluation record
 
 The Phase 3.2 deterministic aggregation covered 9 cases under Justice, Reversal, and Tower: 27 evaluation units, all reported PASS. Phase 3.3 compared the three perspectives across 11 axes, producing 99 comparison units: `consistent: 37`, `complementary: 32`, `tension: 18`, `direct_conflict: 0`, and `cannot_compare: 12`. Six high-priority cases were subsequently reviewed by a human, and all six were recorded as `acceptable_for_release`.

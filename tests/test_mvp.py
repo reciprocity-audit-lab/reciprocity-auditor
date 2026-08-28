@@ -14,6 +14,11 @@ from pathlib import Path
 from reciprocity_auditor.cli import main
 from reciprocity_auditor.comparison import Observation, _classify, compare_perspectives
 from reciprocity_auditor.errors import AuditorError
+from reciprocity_auditor.evaluation import (
+    comparison_review_status,
+    record_comparison_review,
+    record_run_configuration,
+)
 from reciprocity_auditor.packet import prepare_case
 from reciprocity_auditor.publication import PUBLIC_TIMESTAMP, export_public_case
 from reciprocity_auditor.rendering import render_analysis
@@ -77,6 +82,26 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
         self.assertEqual(27, len(rows))
         self.assertEqual(27, len({row["id"] for row in rows}))
         self.assertTrue(all(required.issubset(row) for row in rows))
+
+    def test_evaluation_scenarios_cover_four_required_categories(self) -> None:
+        fixture = json.loads((FIXTURES / "evaluation-scenarios.json").read_text(encoding="utf-8"))
+        scenarios = fixture["scenarios"]
+        self.assertEqual(
+            {
+                "missing_information",
+                "justified_asymmetry",
+                "conflict_of_interest",
+                "undefined_enforcement",
+            },
+            {scenario["category"] for scenario in scenarios},
+        )
+        self.assertEqual(4, len(scenarios))
+        self.assertTrue(fixture["limitations"])
+        for scenario in scenarios:
+            self.assertTrue(scenario["proposal"])
+            self.assertTrue(scenario["required_considerations"])
+            self.assertTrue(scenario["prohibited_overclaims"])
+            self.assertTrue(scenario["human_review_focus"])
 
     def test_json_fixture_loads(self) -> None:
         value = json.loads((FIXTURES / "analysis-valid.json").read_text(encoding="utf-8"))
@@ -659,6 +684,103 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
         }
         self.assertEqual(before, after)
 
+    def test_comparison_without_run_configuration_preserves_null_and_no_inference(self) -> None:
+        cases = self._perspective_cases()
+        result = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "comparison-no-config",
+        )
+        payload = json.loads(result.json_path.read_text(encoding="utf-8"))
+        self.assertEqual("not_demonstrated", payload["configuration_summary"]["configuration_comparability"])
+        self.assertEqual("incomplete", payload["configuration_summary"]["recorded_field_relationship"])
+        self.assertFalse(payload["configuration_summary"]["inference_used"])
+        for source in payload["sources"].values():
+            config = source["run_configuration"]
+            self.assertIsNone(config["model_display_name"])
+            self.assertIsNone(config["reasoning_setting"])
+            self.assertEqual("not_recorded", config["evidence_source"])
+            self.assertFalse(config["inference_used"])
+
+    def test_record_run_configuration_unavailable_records_nulls(self) -> None:
+        case_dir = self.prepare(case_id="config-unavailable", perspective="justice")
+        self.place_analysis(case_dir)
+        record = record_run_configuration(case_dir, evidence_source="unavailable")
+        self.assertIsNone(record["model_display_name"])
+        self.assertIsNone(record["reasoning_setting"])
+        self.assertFalse(record["explicitly_recorded"])
+        self.assertFalse(record["inference_used"])
+
+    def test_record_run_configuration_rejects_inferred_or_unbound_values(self) -> None:
+        case_dir = self.prepare(case_id="config-guard", perspective="justice")
+        self.place_analysis(case_dir)
+        with self.assertRaisesRegex(AuditorError, "unavailable"):
+            record_run_configuration(
+                case_dir,
+                evidence_source="unavailable",
+                model_display_name="guessed-model",
+            )
+        with self.assertRaisesRegex(AuditorError, "モデル表示名または推論設定"):
+            record_run_configuration(case_dir, evidence_source="model_ui")
+
+    def test_explicit_matching_fields_do_not_claim_full_comparability(self) -> None:
+        cases = self._perspective_cases()
+        for case_dir in cases.values():
+            record_run_configuration(
+                case_dir,
+                evidence_source="model_ui",
+                model_display_name="displayed-model",
+                reasoning_setting="displayed-setting",
+            )
+        result = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "comparison-matching-config",
+        )
+        payload = json.loads(result.json_path.read_text(encoding="utf-8"))
+        summary = payload["configuration_summary"]
+        self.assertEqual("recorded_fields_match", summary["recorded_field_relationship"])
+        self.assertEqual("not_demonstrated", summary["configuration_comparability"])
+        self.assertIn("完全な同一性は示しません", summary["reason"])
+
+    def test_explicit_different_fields_are_reported_without_inference(self) -> None:
+        cases = self._perspective_cases()
+        for perspective, case_dir in cases.items():
+            record_run_configuration(
+                case_dir,
+                evidence_source="run_manifest",
+                model_display_name=f"model-{perspective}",
+                reasoning_setting="recorded-setting",
+            )
+        result = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "comparison-different-config",
+        )
+        payload = json.loads(result.json_path.read_text(encoding="utf-8"))
+        self.assertEqual("recorded_fields_differ", payload["configuration_summary"]["recorded_field_relationship"])
+        self.assertFalse(payload["configuration_summary"]["inference_used"])
+
+    def test_run_configuration_is_bound_to_analysis_hash(self) -> None:
+        cases = self._perspective_cases()
+        record_run_configuration(cases["justice"], evidence_source="unavailable")
+        analysis = json.loads((cases["justice"] / "analysis.json").read_text(encoding="utf-8"))
+        analysis["proposal_summary"]["summary"] += " 追記"
+        (cases["justice"] / "analysis.json").write_text(
+            json.dumps(analysis, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(AuditorError, "analysis.jsonが変更"):
+            compare_perspectives(
+                justice_case=cases["justice"],
+                reversal_case=cases["reversal"],
+                tower_case=cases["tower"],
+                output_dir=self.temp_root / "blocked-stale-config",
+            )
+
     def test_compare_perspectives_requires_matching_proposal_hashes(self) -> None:
         cases = self._perspective_cases()
         other = self.temp_root / "other-proposal.txt"
@@ -765,6 +887,162 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
         self.assertIn("compare-perspectives: 完了", stdout.getvalue())
         self.assertTrue((output / "perspective-comparison.json").is_file())
         self.assertTrue((output / "perspective-comparison-ja.md").is_file())
+
+    def test_independent_comparison_review_requires_basis_and_is_hash_bound(self) -> None:
+        cases = self._perspective_cases()
+        comparison = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "reviewed-comparison",
+        )
+        with self.assertRaisesRegex(AuditorError, "独立性の根拠"):
+            record_comparison_review(
+                comparison.output_dir,
+                review_state="reviewed",
+                reviewer_label="reviewer-a",
+                independence_status="independent",
+            )
+        review = record_comparison_review(
+            comparison.output_dir,
+            review_state="reviewed",
+            reviewer_label="reviewer-a",
+            independence_status="independent",
+            independence_basis="生成と比較に参加していない別の人間が確認",
+        )
+        self.assertTrue(review["independence_is_self_attested"])
+        self.assertEqual(hashlib.sha256(comparison.json_path.read_bytes()).hexdigest(), review["comparison_json_sha256"])
+        self.assertEqual(hashlib.sha256(comparison.markdown_path.read_bytes()).hexdigest(), review["comparison_markdown_sha256"])
+        self.assertIn("最終判断ではありません", review["meaning"])
+
+    def test_multiple_comparison_reviews_are_counted_by_independence(self) -> None:
+        cases = self._perspective_cases()
+        comparison = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "multi-review-comparison",
+        )
+        record_comparison_review(
+            comparison.output_dir,
+            review_state="reviewed",
+            reviewer_label="reviewer-independent",
+            independence_status="independent",
+            independence_basis="生成者と異なる人間による確認",
+        )
+        record_comparison_review(
+            comparison.output_dir,
+            review_state="reviewed",
+            reviewer_label="reviewer-operator",
+            independence_status="not_independent",
+        )
+        record_comparison_review(
+            comparison.output_dir,
+            review_state="needs_revision",
+            reviewer_label="reviewer-third",
+            independence_status="unknown",
+        )
+        status = comparison_review_status(comparison.output_dir)
+        self.assertEqual(3, status["reviews_total"])
+        self.assertEqual(2, status["reviewed_count"])
+        self.assertEqual(1, status["independent_reviewed_count"])
+        self.assertEqual(1, status["not_independent_reviewed_count"])
+        self.assertEqual(1, status["needs_revision_count"])
+        self.assertEqual(0, status["invalid_count"])
+
+    def test_comparison_review_status_detects_changed_comparison(self) -> None:
+        cases = self._perspective_cases()
+        comparison = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "changed-comparison-review",
+        )
+        record_comparison_review(
+            comparison.output_dir,
+            review_state="reviewed",
+            reviewer_label="reviewer-a",
+            independence_status="unknown",
+        )
+        payload = json.loads(comparison.json_path.read_text(encoding="utf-8"))
+        payload["limitations"].append("changed")
+        comparison.json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        status = comparison_review_status(comparison.output_dir)
+        self.assertEqual(1, status["invalid_count"])
+        self.assertEqual(0, status["reviewed_count"])
+
+    def test_comparison_review_status_rejects_tampered_independence_attestation(self) -> None:
+        cases = self._perspective_cases()
+        comparison = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "tampered-review-comparison",
+        )
+        record_comparison_review(
+            comparison.output_dir,
+            review_state="reviewed",
+            reviewer_label="reviewer-a",
+            independence_status="independent",
+            independence_basis="生成に参加していない人間による確認",
+        )
+        path = comparison.output_dir / "comparison-reviews" / "reviewer-a.json"
+        record = json.loads(path.read_text(encoding="utf-8"))
+        record["independence_is_self_attested"] = False
+        path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        status = comparison_review_status(comparison.output_dir)
+        self.assertEqual(1, status["invalid_count"])
+        self.assertEqual(0, status["reviewed_count"])
+
+    def test_cli_run_configuration_and_comparison_review(self) -> None:
+        cases = self._perspective_cases()
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            self.assertEqual(
+                0,
+                main(
+                    [
+                        "record-run-config",
+                        "--case",
+                        str(cases["justice"]),
+                        "--evidence-source",
+                        "unavailable",
+                    ]
+                ),
+            )
+        self.assertIn("inference_used: false", stdout.getvalue())
+
+        comparison = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "cli-evaluation-comparison",
+        )
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            self.assertEqual(
+                0,
+                main(
+                    [
+                        "review-comparison",
+                        "--comparison",
+                        str(comparison.output_dir),
+                        "--state",
+                        "reviewed",
+                        "--reviewer-label",
+                        "reviewer-cli",
+                        "--independence",
+                        "independent",
+                        "--independence-basis",
+                        "separate human reviewer",
+                    ]
+                ),
+            )
+            self.assertEqual(
+                0,
+                main(["comparison-review-status", "--comparison", str(comparison.output_dir)]),
+            )
+        self.assertIn("independent_reviewed_count: 1", stdout.getvalue())
 
     def test_source_has_no_network_client_imports(self) -> None:
         source = "\n".join(

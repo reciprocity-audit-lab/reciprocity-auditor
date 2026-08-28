@@ -7,6 +7,11 @@ from pathlib import Path
 
 from .comparison import compare_perspectives
 from .errors import AuditorError
+from .evaluation import (
+    comparison_review_status,
+    record_comparison_review,
+    record_run_configuration,
+)
 from .io_utils import project_root, read_case
 from .packet import prepare_case
 from .publication import export_public_case
@@ -66,6 +71,33 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("--reversal", type=Path, required=True, help="Reversalケースフォルダ")
     compare.add_argument("--tower", type=Path, required=True, help="Towerケースフォルダ")
     compare.add_argument("--output", type=Path, required=True, help="新規比較結果フォルダ")
+
+    run_config = commands.add_parser("record-run-config", help="明示的に確認できたモデル実行構成だけを記録")
+    run_config.add_argument("--case", type=Path, required=True, help="検証済みケースフォルダ")
+    run_config.add_argument(
+        "--evidence-source",
+        choices=("model_ui", "run_manifest", "operator_observation", "unavailable"),
+        required=True,
+        help="値を明示確認した証拠元。確認不能ならunavailable",
+    )
+    run_config.add_argument("--model-display-name", help="明示表示された場合だけ指定")
+    run_config.add_argument("--reasoning-setting", help="明示表示された場合だけ指定")
+
+    comparison_review = commands.add_parser("review-comparison", help="3視点比較に人間レビューをハッシュ結合して記録")
+    comparison_review.add_argument("--comparison", type=Path, required=True, help="比較結果フォルダ")
+    comparison_review.add_argument("--state", choices=("needs_revision", "reviewed"), required=True)
+    comparison_review.add_argument("--reviewer-label", required=True, help="実名不要の匿名ラベル")
+    comparison_review.add_argument(
+        "--independence",
+        choices=("independent", "not_independent", "unknown"),
+        required=True,
+        help="生成・比較作業からの独立性に関する自己申告",
+    )
+    comparison_review.add_argument("--independence-basis", help="independentでは必須の短い根拠")
+    comparison_review.add_argument("--note", help="任意の短いレビューメモ。秘密情報は禁止")
+
+    comparison_status = commands.add_parser("comparison-review-status", help="3視点比較の人間レビュー件数を表示")
+    comparison_status.add_argument("--comparison", type=Path, required=True, help="比較結果フォルダ")
 
     commands.add_parser("test", help="ローカルunittestを実行")
     return parser
@@ -187,6 +219,44 @@ def main(argv: list[str] | None = None) -> int:
             for status in ("consistent", "complementary", "tension", "direct_conflict", "cannot_compare"):
                 print(f"{status}: {result.summary[status]}")
             print("meaning: 構造的比較であり、公平性・適法性・採否・処罰の最終判断ではありません。")
+            return 0
+
+        if args.command == "record-run-config":
+            record = record_run_configuration(
+                args.case,
+                evidence_source=args.evidence_source,
+                model_display_name=args.model_display_name,
+                reasoning_setting=args.reasoning_setting,
+            )
+            print("record-run-config: 完了")
+            print(f"case_id: {record['case_id']}")
+            print(f"model_display_name: {record['model_display_name']}")
+            print(f"reasoning_setting: {record['reasoning_setting']}")
+            print(f"evidence_source: {record['evidence_source']}")
+            print("inference_used: false")
+            return 0
+
+        if args.command == "review-comparison":
+            record = record_comparison_review(
+                args.comparison,
+                review_state=args.state,
+                reviewer_label=args.reviewer_label,
+                independence_status=args.independence,
+                independence_basis=args.independence_basis,
+                note=args.note,
+            )
+            print("review-comparison: 記録完了")
+            print(f"reviewer_label: {record['reviewer_label']}")
+            print(f"state: {record['review_state']}")
+            print(f"independence: {record['independence_status']} (self-attested)")
+            print("meaning: 比較結果の確認記録であり、元提案や公平性・適法性の承認ではありません。")
+            return 0
+
+        if args.command == "comparison-review-status":
+            status_value = comparison_review_status(args.comparison)
+            for key, value in status_value.items():
+                print(f"{key}: {value}")
+            print("independence_verification: self_attested_only")
             return 0
 
         if args.command == "test":
