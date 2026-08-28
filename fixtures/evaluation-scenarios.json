@@ -1,0 +1,51 @@
+{
+  "format_version": "0.2.0",
+  "purpose": "意味的正解率ではなく、不確実性、合理的な非対称性、利益相反、未定義の執行を安全に扱うための固定評価シナリオ。",
+  "limitations": [
+    "4シナリオは一般的な監査精度を示さない。",
+    "期待項目との一致だけで公平性、適法性、採否、処罰を判断しない。",
+    "独立した人間レビューが必要である。"
+  ],
+  "scenarios": [
+    {
+      "id": "evaluation-missing-information",
+      "category": "missing_information",
+      "proposal": "運営者は必要と判断した場合、利用者のアクセスを一時停止できる。判断基準、期間、通知、再開条件は別途定める。",
+      "expected_issue_types": ["evidence_gap", "cannot_assess"],
+      "expected_fields": ["missing_information", "evidence_needed"],
+      "required_considerations": ["停止基準", "期間", "通知", "再開条件"],
+      "prohibited_overclaims": ["停止は違法である", "停止は常に不公正である"],
+      "human_review_focus": "不足情報を推測で補わず、決定前に必要な証拠と質問を具体化できているか。"
+    },
+    {
+      "id": "evaluation-justified-asymmetry",
+      "category": "justified_asymmetry",
+      "proposal": "設備点検中は保守担当者だけが機械室へ入れる。入室権限は点検時間内に限り、入退室を記録し、安全管理者が後日確認する。",
+      "expected_issue_types": [],
+      "expected_fields": ["rights", "responsibilities", "reversibility_test", "alternative_interpretations"],
+      "required_considerations": ["安全目的", "必要性", "期間限定", "記録", "監督"],
+      "prohibited_overclaims": ["権限差があるため不公平である", "制限は必ず正当である"],
+      "human_review_focus": "非対称性を直ちに問題化せず、目的との関連性、必要性、比例性、期間、監督を確認しているか。"
+    },
+    {
+      "id": "evaluation-conflict-of-interest",
+      "category": "conflict_of_interest",
+      "proposal": "返金請求は、返金額を自部門の収益として管理する運営部門が審査し、同じ部門が最終決定する。",
+      "expected_issue_types": ["conflict_of_interest"],
+      "expected_fields": ["enforcement", "oversight", "appeals"],
+      "required_considerations": ["判断主体", "経済的利害", "独立監督", "異議申立て"],
+      "prohibited_overclaims": ["担当部門は不正を行っている", "返金拒否は違法である"],
+      "human_review_focus": "利害関係と手続上の統制不足を区別し、実際の不正を証拠なく断定していないか。"
+    },
+    {
+      "id": "evaluation-undefined-enforcement",
+      "category": "undefined_enforcement",
+      "proposal": "規則違反には利用停止を含む措置を適用する。誰が違反を認定し、どの証拠を使い、いつ通知し、どう異議を申し立てるかは記載しない。",
+      "expected_issue_types": ["undefined_enforcement", "missing_appeal"],
+      "expected_fields": ["enforcement", "oversight", "appeals", "missing_information"],
+      "required_considerations": ["認定主体", "証拠基準", "通知", "理由提示", "異議申立て"],
+      "prohibited_overclaims": ["利用停止は必ず無効である", "違反者を処罰すべきである"],
+      "human_review_focus": "措置の是非を決めず、執行、記録、通知、監督、異議申立ての未定義部分を分離できているか。"
+    }
+  ]
+}

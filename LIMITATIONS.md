@@ -32,6 +32,12 @@ The following metadata remains unresolved:
 - `reasoning_setting: null`
 - `configuration_comparability: not_demonstrated`
 
+Version 0.2 work can record a model display name or reasoning setting only when an operator explicitly identifies its source. A missing value remains `null` and is not inferred. Even if the recorded display names and reasoning settings match, other unrecorded configuration can differ, so complete configuration comparability remains `not_demonstrated`.
+
+Comparison-review records can distinguish self-attested `independent`, `not_independent`, and `unknown` reviewers and bind those records to comparison hashes. The software does not verify the reviewer's identity, independence, expertise, or separation from generation and comparison work. A recorded independent review remains evidence supplied by the reviewer, not a guarantee by the tool.
+
+The four additional evaluation scenarios cover missing information, justified asymmetry, conflicts of interest, and undefined enforcement. They are regression fixtures, not a representative benchmark, and do not establish semantic accuracy or performance on other contracts and rules.
+
 Phase 3.3 was an operator semantic comparison, not an independent human evaluation. The evidence does not establish that the same model and reasoning settings were used, and it does not establish independent heterogeneous-model evaluation. The 27/27 PASS result is bounded to the recorded evaluation units and does not mean 100% general performance, 100% audit accuracy, proof of complete fairness, or reliable judgment for every contract.
 
 See [`evaluation/README.md`](evaluation/README.md) for the included records.

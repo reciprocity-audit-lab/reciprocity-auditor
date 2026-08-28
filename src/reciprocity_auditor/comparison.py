@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .errors import AuditorError
+from .evaluation import load_run_configuration, summarize_configuration
 from .io_utils import read_case, sha256_file, validate_case_id, write_new_text
 from .validation import validate_analysis
 
@@ -195,7 +196,7 @@ def _classify(observations: dict[str, Observation]) -> tuple[str, str]:
     return "tension", "複数視点に比較可能な項目がありますが、追加関係だけでは整理できません。"
 
 
-def _load_perspective(case_dir: Path, expected: str) -> tuple[dict[str, Any], dict[str, Any], str]:
+def _load_perspective(case_dir: Path, expected: str) -> tuple[dict[str, Any], dict[str, Any], str, dict[str, Any]]:
     case, _ = read_case(case_dir)
     validate_case_id(str(case.get("case_id", "")))
     actual = case.get("analysis_perspective")
@@ -208,7 +209,9 @@ def _load_perspective(case_dir: Path, expected: str) -> tuple[dict[str, Any], di
     result = validate_analysis(analysis_path, write_result=False)
     if not result.valid or result.data is None:
         raise AuditorError("comparison_validation_failed", f"{expected}のanalysis.jsonが検証に合格していません。")
-    return case, result.data, sha256_file(analysis_path)
+    analysis_sha256 = sha256_file(analysis_path)
+    configuration = load_run_configuration(case_dir, analysis_sha256)
+    return case, result.data, analysis_sha256, configuration
 
 
 def _render_markdown(payload: dict[str, Any]) -> str:
@@ -219,6 +222,8 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         "",
         f"- proposal_sha256: `{payload['proposal_sha256']}`",
         "- comparison_method: `structural-v0.2`",
+        f"- configuration_comparability: `{payload['configuration_summary']['configuration_comparability']}`",
+        f"- recorded_field_relationship: `{payload['configuration_summary']['recorded_field_relationship']}`",
         "- human_review_required: `true`",
         "",
         "## 集計",
@@ -240,6 +245,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
             "- `direct_conflict`は、同じ構造化真偽値に明示的な反対値がある場合だけ使用します。",
             "- `cannot_compare`は、比較材料がない状態です。問題が存在しないことを意味しません。",
             "- 自由記述の言い換えや意味的同等性は判定しません。独立した人間レビューが必要です。",
+            f"- 実行構成: {payload['configuration_summary']['reason']}",
             "",
             "## 最終責任",
             "",
@@ -266,7 +272,7 @@ def compare_perspectives(
         resolved_source = source_dir.resolve(strict=False)
         if resolved_output == resolved_source or resolved_source in resolved_output.parents:
             raise AuditorError("unsafe_output_location", "比較結果は3つの元ケースの外へ出力してください。")
-    loaded: dict[str, tuple[dict[str, Any], dict[str, Any], str]] = {}
+    loaded: dict[str, tuple[dict[str, Any], dict[str, Any], str, dict[str, Any]]] = {}
     for perspective in PERSPECTIVE_NAMES:
         loaded[perspective] = _load_perspective(source_dirs[perspective], perspective)
 
@@ -274,6 +280,10 @@ def compare_perspectives(
     if len(proposal_hashes) != 1:
         raise AuditorError("proposal_hash_mismatch", "3視点の提案SHA-256が一致しません。")
     proposal_sha256 = str(next(iter(proposal_hashes)))
+    configurations = {
+        perspective: loaded[perspective][3]
+        for perspective in PERSPECTIVE_NAMES
+    }
 
     axes: list[dict[str, Any]] = []
     summary = {status: 0 for status in STATUS_NAMES}
@@ -305,9 +315,11 @@ def compare_perspectives(
                 "case_id": loaded[perspective][0]["case_id"],
                 "analysis_perspective": perspective,
                 "analysis_sha256": loaded[perspective][2],
+                "run_configuration": configurations[perspective],
             }
             for perspective in PERSPECTIVE_NAMES
         },
+        "configuration_summary": summarize_configuration(configurations),
         "axes": axes,
         "summary": summary,
         "human_review_required": True,

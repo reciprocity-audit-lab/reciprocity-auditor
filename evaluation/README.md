@@ -21,3 +21,10 @@ Phase 3.2 reports 27/27 PASS across Justice, Reversal, and Tower. This is not a 
 
 Configuration metadata is incomplete: `model_display_name: null`, `reasoning_setting: null`, and `configuration_comparability: not_demonstrated`. Do not describe the runs as using identical model/reasoning settings or as an independent heterogeneous-model evaluation.
 
+## v0.2 evaluation-record workflow
+
+New runs may use `record-run-config` to bind explicitly observed model display names and reasoning settings to an analysis hash. Unknown values remain `null`, and the tool does not infer them. Matching recorded fields are reported separately from full configuration comparability, which remains `not_demonstrated` unless broader evidence exists outside this tool.
+
+Cross-perspective comparisons may receive multiple hash-bound human-review records. Independence is self-attested as `independent`, `not_independent`, or `unknown`; it is not verified by the software. Existing Phase 3.3 records remain accurately described as not being an independent human evaluation.
+
+The fixed evaluation scenarios in [`../fixtures/evaluation-scenarios.json`](../fixtures/evaluation-scenarios.json) cover missing information, justified asymmetry, conflicts of interest, and undefined enforcement. They supplement regression coverage but do not change or retroactively improve the reported Phase 3–3.3 results.

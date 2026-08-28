@@ -64,6 +64,16 @@ fixtureのコピーは再現確認用です。通常利用では、`analysis-pac
 
 Windowsでの完全な手順は[`QUICKSTART-JA.md`](QUICKSTART-JA.md)の「Justice・Reversal・Towerの3視点を比較する」を参照してください。
 
+## 評価記録
+
+`record-run-config`は、画面表示、実行マニフェスト、または明示的なoperator記録で確認できたモデル表示名と推論設定だけを、分析JSONのSHA-256へ結び付けて記録します。確認不能な場合は`unavailable`として`null`を保存し、値を推測しません。
+
+3視点の記録項目が一致しても、未記録設定を含む完全な構成同一性は示されないため、`configuration_comparability`は`not_demonstrated`のままです。比較結果には、記録項目が`recorded_fields_match`、`recorded_fields_differ`、`incomplete`のどれかを別に表示します。
+
+`review-comparison`は、比較JSONとMarkdownのSHA-256に結び付いた複数の人間レビューを匿名ラベルで記録できます。独立性は`independent`、`not_independent`、`unknown`の自己申告であり、ツールが保証するものではありません。
+
+回帰用の[`fixtures/evaluation-scenarios.json`](fixtures/evaluation-scenarios.json)は、不足情報、合理的な非対称性、利益相反、未定義の執行を扱います。肯定的な結果には常に限界事項を併記し、限定的なfixtureから一般的な監査精度を主張しません。
+
 ## 評価実績
 
 Phase 3.2の決定的集約は9ケースをJustice / Reversal / Towerの3視点で扱い、27評価単位すべてが報告上PASSでした。Phase 3.3は11軸・99比較単位で、`consistent: 37`、`complementary: 32`、`tension: 18`、`direct_conflict: 0`、`cannot_compare: 12`でした。その後、high優先度6ケースを人間が確認し、6ケースすべてが`acceptable_for_release`と記録されました。

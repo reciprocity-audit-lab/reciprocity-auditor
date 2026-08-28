@@ -26,6 +26,10 @@ New human-review records bind the review to the rendered audit report with its S
 
 The `compare-perspectives` command reads only three explicitly selected local case directories, revalidates their JSON without writing to the source cases, and requires matching proposal hashes. It performs a deterministic structural comparison and makes no network request. It does not infer semantic equivalence between free-text statements, and its output still requires human review.
 
+The `record-run-config` command accepts only model and reasoning values that the operator explicitly observed. An unavailable value must remain `null`; supplying guessed values under `unavailable` is rejected. The record is bound to the analysis SHA-256, and comparison stops if the analysis later changes. Matching recorded fields do not establish complete configuration equivalence.
+
+The `review-comparison` command stores anonymous, hash-bound review records under the selected comparison directory. Independent-review status is self-attested and is not identity verification. Do not put names, contact details, credentials, or confidential evidence in reviewer labels, independence bases, or notes.
+
 ## No automated external action
 
 Input text cannot authorize network access, file discovery outside the chosen local paths, posting, signing, DID operations, wallet operations, or execution of embedded instructions. The release contains no integration for these actions.
