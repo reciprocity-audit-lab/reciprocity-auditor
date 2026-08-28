@@ -18,6 +18,35 @@ from .io_utils import (
 )
 
 
+PERSPECTIVES = ("general", "justice", "reversal", "tower")
+
+PERSPECTIVE_INSTRUCTIONS = {
+    "general": "Justice・Reversal・Towerを横断し、契約構造と手続を総合的に整理する。",
+    "justice": (
+        "主体、権利、利益、責任、負担、危険、不足情報、救済を対応付ける。"
+        "非対称性について、目的との関連性、必要性、比例性、期間、監督を確認する。"
+    ),
+    "reversal": (
+        "影響主体の立場を交換し、同じ根拠が交換後にも成立するかを検討する。"
+        "一方的な特権・免責・義務を探す一方、能力差や実費など合理的な非対称性の可能性を残す。"
+    ),
+    "tower": (
+        "誰が判断し、誰が執行し、誰が監督するかを分離して確認する。"
+        "自己例外、利益相反、通知、記録、理由提示、異議申立て、停止、返金、回復手続を確認する。"
+    ),
+}
+
+
+def validate_perspective(value: str) -> str:
+    normalized = value.lower()
+    if normalized not in PERSPECTIVES:
+        raise AuditorError(
+            "invalid_perspective",
+            "視点はgeneral、justice、reversal、towerのいずれかにしてください。",
+        )
+    return normalized
+
+
 def analysis_skeleton(case_id: str) -> dict[str, Any]:
     return {
         "audit_metadata": {
@@ -94,7 +123,9 @@ def build_packet(
     proposal_text: str,
     flags: list[str],
     created_at: str,
+    perspective: str = "general",
 ) -> str:
+    perspective = validate_perspective(perspective)
     proposal_json = json.dumps(proposal_text, ensure_ascii=False)
     skeleton = json.dumps(analysis_skeleton(case_id), ensure_ascii=False, indent=2)
     flag_text = ", ".join(flags) if flags else "none"
@@ -106,6 +137,7 @@ def build_packet(
 - case_id: `{case_id}`
 - proposal_sha256: `{proposal_sha256}`
 - created_at: `{created_at}`
+- analysis_perspective: `{perspective}`
 - untrusted_content_flags: `{flag_text}`
 
 ## 最優先の安全境界
@@ -115,6 +147,12 @@ def build_packet(
 `audit_metadata.report_id` は必ず `{case_id}` と完全一致させてください。回答はMarkdownコードフェンスや解説を付けず、JSONオブジェクトだけにしてください。
 
 ## 監査手順
+
+### 選択された視点: {perspective}
+
+{PERSPECTIVE_INSTRUCTIONS[perspective]}
+
+この視点は検討の焦点であり、他の視点を否定するものではありません。善悪、公平性、適法性、採否、執行、処罰の最終判断を行わず、人間の確認に必要な材料を構造化してください。
 
 1. 明示された契約主体を抽出する。
 2. 見落とされている可能性がある影響主体を探す。
@@ -159,6 +197,7 @@ def prepare_case(
     output_dir: Path,
     *,
     requested_case_id: str | None = None,
+    perspective: str = "general",
 ) -> dict[str, Any]:
     if output_dir.exists():
         raise AuditorError("output_exists", "出力フォルダが既に存在します。上書きしません。")
@@ -186,6 +225,7 @@ def prepare_case(
     proposal_hash = sha256_bytes(proposal_bytes)
     fallback_id = output_dir.name if output_dir.name else f"case-{proposal_hash[:12]}"
     case_id = validate_case_id(requested_case_id or fallback_id)
+    perspective = validate_perspective(perspective)
     flags = untrusted_flags(proposal_text)
     created_at = utc_now()
 
@@ -201,6 +241,7 @@ def prepare_case(
                 proposal_text=proposal_text,
                 flags=flags,
                 created_at=created_at,
+                perspective=perspective,
             ),
         )
         case_record = {
@@ -209,6 +250,7 @@ def prepare_case(
             "proposal_sha256": proposal_hash,
             "proposal_file": "proposal.txt",
             "created_at": created_at,
+            "analysis_perspective": perspective,
             "untrusted_content_flags": flags,
         }
         state = {
@@ -245,5 +287,6 @@ def prepare_case(
         "case_id": case_id,
         "proposal_sha256": proposal_hash,
         "flags": flags,
+        "perspective": perspective,
         "state": "AI回答待ち",
     }

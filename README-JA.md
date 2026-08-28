@@ -56,6 +56,14 @@ fixtureのコピーは再現確認用です。通常利用では、`analysis-pac
 
 詳しい手順は[`QUICKSTART-JA.md`](QUICKSTART-JA.md)を参照してください。
 
+## 明示的な3視点ワークフロー
+
+`prepare --perspective justice|reversal|tower`を使うと、選択した視点の役割を分析パケットとケース記録へ明示できます。同じ提案に対する3つの検証済み結果は、`compare-perspectives`で11軸の決定的な構造比較へ変換できます。
+
+比較分類は`consistent`、`complementary`、`tension`、`direct_conflict`、`cannot_compare`の5種類です。自由記述の意味的同一性を推測せず、明示的な反対の構造化真偽値がある場合だけ`direct_conflict`とします。比較結果は人間レビューの材料であり、どの視点が正しいか、公平か、適法か、採択・執行・処罰すべきかを決めません。
+
+Windowsでの完全な手順は[`QUICKSTART-JA.md`](QUICKSTART-JA.md)の「Justice・Reversal・Towerの3視点を比較する」を参照してください。
+
 ## 評価実績
 
 Phase 3.2の決定的集約は9ケースをJustice / Reversal / Towerの3視点で扱い、27評価単位すべてが報告上PASSでした。Phase 3.3は11軸・99比較単位で、`consistent: 37`、`complementary: 32`、`tension: 18`、`direct_conflict: 0`、`cannot_compare: 12`でした。その後、high優先度6ケースを人間が確認し、6ケースすべてが`acceptable_for_release`と記録されました。

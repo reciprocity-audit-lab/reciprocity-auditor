@@ -12,6 +12,7 @@ import zipfile
 from pathlib import Path
 
 from reciprocity_auditor.cli import main
+from reciprocity_auditor.comparison import Observation, _classify, compare_perspectives
 from reciprocity_auditor.errors import AuditorError
 from reciprocity_auditor.packet import prepare_case
 from reciprocity_auditor.publication import PUBLIC_TIMESTAMP, export_public_case
@@ -33,12 +34,19 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
     def tearDown(self) -> None:
         self._temp.cleanup()
 
-    def prepare(self, *, proposal: Path | None = None, case_id: str = "case-001") -> Path:
+    def prepare(
+        self,
+        *,
+        proposal: Path | None = None,
+        case_id: str = "case-001",
+        perspective: str = "general",
+    ) -> Path:
         case_dir = self.temp_root / case_id
         prepare_case(
             proposal or (FIXTURES / "proposal.txt"),
             case_dir,
             requested_case_id=case_id,
+            perspective=perspective,
         )
         return case_dir
 
@@ -159,6 +167,27 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
             (FIXTURES / "proposal-injection.txt").read_bytes(),
             (case_dir / "proposal.txt").read_bytes(),
         )
+
+    def test_prepare_makes_selected_perspective_explicit(self) -> None:
+        expected = {
+            "justice": "主体、権利、利益、責任、負担、危険",
+            "reversal": "影響主体の立場を交換",
+            "tower": "誰が判断し、誰が執行し、誰が監督",
+        }
+        for perspective, phrase in expected.items():
+            with self.subTest(perspective=perspective):
+                case_dir = self.prepare(case_id=f"{perspective}-case", perspective=perspective)
+                case = json.loads((case_dir / "case.json").read_text(encoding="utf-8"))
+                packet = (case_dir / "analysis-packet.md").read_text(encoding="utf-8")
+                self.assertEqual(perspective, case["analysis_perspective"])
+                self.assertIn(f"analysis_perspective: `{perspective}`", packet)
+                self.assertIn(phrase, packet)
+                self.assertIn("善悪、公平性、適法性、採否、執行、処罰の最終判断を行わず", packet)
+
+    def test_prepare_default_perspective_remains_general(self) -> None:
+        case_dir = self.prepare(case_id="legacy-default")
+        case = json.loads((case_dir / "case.json").read_text(encoding="utf-8"))
+        self.assertEqual("general", case["analysis_perspective"])
 
     def test_prepare_rejects_sensitive_material_without_creating_case(self) -> None:
         proposal = self.temp_root / "sensitive.txt"
@@ -578,6 +607,164 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
         self.assertEqual(0, exit_code)
         self.assertIn("privacy_scan: pass", stdout.getvalue())
         self.assertIn("zip_sha256:", stdout.getvalue())
+
+    def _perspective_cases(self) -> dict[str, Path]:
+        cases: dict[str, Path] = {}
+        for perspective in ("justice", "reversal", "tower"):
+            case_dir = self.prepare(case_id=f"comparison-{perspective}", perspective=perspective)
+            analysis = self.place_analysis(case_dir)
+            result = validate_analysis(analysis)
+            self.assertTrue(result.valid)
+            cases[perspective] = case_dir
+        return cases
+
+    def test_compare_perspectives_is_deterministic_and_does_not_mutate_sources(self) -> None:
+        cases = self._perspective_cases()
+        before = {
+            perspective: {
+                path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in case_dir.iterdir()
+                if path.is_file()
+            }
+            for perspective, case_dir in cases.items()
+        }
+        first = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "comparison-first",
+        )
+        second = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "comparison-second",
+        )
+        self.assertEqual(first.json_path.read_bytes(), second.json_path.read_bytes())
+        self.assertEqual(first.markdown_path.read_bytes(), second.markdown_path.read_bytes())
+        payload = json.loads(first.json_path.read_text(encoding="utf-8"))
+        self.assertEqual(11, len(payload["axes"]))
+        self.assertEqual(11, sum(payload["summary"].values()))
+        self.assertTrue(payload["human_review_required"])
+        report = first.markdown_path.read_text(encoding="utf-8")
+        self.assertIn("共通の見落としがないことを証明しません", report)
+        self.assertIn("公平性、適法性、採否、執行、処罰を判断しません", report)
+        after = {
+            perspective: {
+                path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in case_dir.iterdir()
+                if path.is_file()
+            }
+            for perspective, case_dir in cases.items()
+        }
+        self.assertEqual(before, after)
+
+    def test_compare_perspectives_requires_matching_proposal_hashes(self) -> None:
+        cases = self._perspective_cases()
+        other = self.temp_root / "other-proposal.txt"
+        other.write_text("別の提案です。", encoding="utf-8")
+        tower = self.temp_root / "other-tower"
+        prepare_case(other, tower, requested_case_id="other-tower", perspective="tower")
+        self.place_analysis(tower)
+        with self.assertRaisesRegex(AuditorError, "SHA-256"):
+            compare_perspectives(
+                justice_case=cases["justice"],
+                reversal_case=cases["reversal"],
+                tower_case=tower,
+                output_dir=self.temp_root / "blocked-comparison",
+            )
+        self.assertFalse((self.temp_root / "blocked-comparison").exists())
+
+    def test_compare_perspectives_rejects_wrong_perspective_metadata(self) -> None:
+        cases = self._perspective_cases()
+        case = json.loads((cases["tower"] / "case.json").read_text(encoding="utf-8"))
+        case["analysis_perspective"] = "general"
+        (cases["tower"] / "case.json").write_text(
+            json.dumps(case, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(AuditorError, "analysis_perspective"):
+            compare_perspectives(
+                justice_case=cases["justice"],
+                reversal_case=cases["reversal"],
+                tower_case=cases["tower"],
+                output_dir=self.temp_root / "blocked-comparison",
+            )
+
+    def test_compare_perspectives_rejects_output_inside_source_case(self) -> None:
+        cases = self._perspective_cases()
+        with self.assertRaisesRegex(AuditorError, "元ケースの外"):
+            compare_perspectives(
+                justice_case=cases["justice"],
+                reversal_case=cases["reversal"],
+                tower_case=cases["tower"],
+                output_dir=cases["justice"] / "comparison",
+            )
+
+    def test_structural_comparison_distinguishes_all_five_statuses(self) -> None:
+        cases = {
+            "cannot_compare": {
+                "justice": Observation(),
+                "reversal": Observation(),
+                "tower": Observation(),
+            },
+            "consistent": {
+                "justice": Observation(("a",)),
+                "reversal": Observation(("a",)),
+                "tower": Observation(("a",)),
+            },
+            "complementary": {
+                "justice": Observation(("a",)),
+                "reversal": Observation(("a", "b")),
+                "tower": Observation(),
+            },
+            "tension": {
+                "justice": Observation(("a", "b")),
+                "reversal": Observation(("a", "c")),
+                "tower": Observation(("a",)),
+            },
+            "direct_conflict": {
+                "justice": Observation(positions=(("enforcement.defined", "true"),)),
+                "reversal": Observation(positions=(("enforcement.defined", "false"),)),
+                "tower": Observation(positions=(("enforcement.defined", "true"),)),
+            },
+        }
+        for expected, observations in cases.items():
+            with self.subTest(expected=expected):
+                self.assertEqual(expected, _classify(observations)[0])
+
+    def test_different_non_boolean_postures_are_not_called_direct_conflict(self) -> None:
+        status, _ = _classify(
+            {
+                "justice": Observation(("result:passes",)),
+                "reversal": Observation(("result:raises_concern",)),
+                "tower": Observation(("result:cannot_assess",)),
+            }
+        )
+        self.assertEqual("tension", status)
+
+    def test_cli_compare_perspectives(self) -> None:
+        cases = self._perspective_cases()
+        output = self.temp_root / "cli-comparison"
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            exit_code = main(
+                [
+                    "compare-perspectives",
+                    "--justice",
+                    str(cases["justice"]),
+                    "--reversal",
+                    str(cases["reversal"]),
+                    "--tower",
+                    str(cases["tower"]),
+                    "--output",
+                    str(output),
+                ]
+            )
+        self.assertEqual(0, exit_code)
+        self.assertIn("compare-perspectives: 完了", stdout.getvalue())
+        self.assertTrue((output / "perspective-comparison.json").is_file())
+        self.assertTrue((output / "perspective-comparison-ja.md").is_file())
 
     def test_source_has_no_network_client_imports(self) -> None:
         source = "\n".join(
