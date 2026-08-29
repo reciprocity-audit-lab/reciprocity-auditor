@@ -10,6 +10,12 @@
 
 Release Candidateフォルダをエクスプローラーで開き、フォルダ内でPowerShellを起動します。
 
+```powershell
+Get-ChildItem -Name
+```
+
+一覧に`Run-ReciprocityAuditor.ps1`が見えることを確認してください。見えない場合は、ZIPの二重フォルダを含む詳しい探索方法を[`docs/WINDOWS-POWERSHELL-GUIDE-JA.md`](docs/WINDOWS-POWERSHELL-GUIDE-JA.md)で確認します。
+
 ## 3. 再現用入力を準備する
 
 ```powershell
@@ -63,6 +69,14 @@ Copy-Item '.\fixtures\analysis-valid.json' '.\work\case-001\analysis.json'
 ```
 
 テストは一時ディレクトリへだけ書き込み、ネットワークを使用しません。`work`は実行時生成物であり、公開物へ含めないでください。
+
+最小フロー全体を一括再現する場合は次を実行します。
+
+```powershell
+.\Verify-LocalWorkflow.ps1
+```
+
+`VERIFICATION PASS`と表示されれば、固定fixtureを使った`prepare → validate → render → review → status`が完走しています。これはAIの意味的な監査精度を測るテストではありません。
 
 ## 7. レビュー済みケースの公開用エクスポート
 
@@ -158,3 +172,18 @@ AI回答を得たとき、モデル表示名または推論設定を画面や実
 比較レビューは比較JSONとMarkdownのSHA-256へ結び付けられます。比較結果が変更されると、`comparison-review-status`は以前のレビューを有効な確認として数えません。この記録は比較結果の確認であり、元提案や各監査報告の承認ではありません。
 
 固定評価シナリオは`fixtures/evaluation-scenarios.json`にあります。不足情報、合理的な非対称性、利益相反、未定義の執行の4種類を収録しています。これは回帰確認用の小規模fixtureであり、一般的な監査精度や完全な公平性を示しません。
+
+## 10. 完成例を確認する
+
+- [`examples/technocore-room-moderation-demo/`](examples/technocore-room-moderation-demo/)：架空提案の意味内容を含む公開完成例
+- [`examples/three-perspective-demo/README-JA.md`](examples/three-perspective-demo/README-JA.md)：固定fixtureによる3視点比較の再現例
+
+3視点デモは次で実行できます。
+
+```powershell
+.\examples\three-perspective-demo\Run-Demo.ps1
+```
+
+## 11. 公開前の人間確認
+
+`export-public`が合格しても、その出力が完全に匿名、安全、正確である保証はありません。公開前に[`docs/PUBLICATION-CHECKLIST-JA.md`](docs/PUBLICATION-CHECKLIST-JA.md)を使い、出力フォルダ内の全ファイルを人間が確認してください。

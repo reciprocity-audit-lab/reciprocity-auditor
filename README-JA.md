@@ -56,6 +56,13 @@ fixtureのコピーは再現確認用です。通常利用では、`analysis-pac
 
 詳しい手順は[`QUICKSTART-JA.md`](QUICKSTART-JA.md)を参照してください。
 
+## 完成例と再現確認
+
+- [`examples/technocore-room-moderation-demo/`](examples/technocore-room-moderation-demo/)は、架空のルーム運用案について、提案、分析パケット、検証済みJSON、監査報告、人間レビュー記録、公開マニフェスト、チェックサムまで収録した完成例です。Technocoreの公式ルールや解釈ではありません。
+- [`examples/three-perspective-demo/README-JA.md`](examples/three-perspective-demo/README-JA.md)は、固定fixtureでJustice、Reversal、Towerの準備・検証・決定的比較を再現する例です。3件に同じ分析内容を使うため、意味分析の独立性や精度を示すものではありません。
+
+[`Verify-LocalWorkflow.ps1`](Verify-LocalWorkflow.ps1)を実行すると、一時フォルダ内で`prepare → validate → render → review → status`を一括確認できます。ZIP展開から迷わず試す手順は[`docs/WINDOWS-POWERSHELL-GUIDE-JA.md`](docs/WINDOWS-POWERSHELL-GUIDE-JA.md)、公開前の人間確認項目は[`docs/PUBLICATION-CHECKLIST-JA.md`](docs/PUBLICATION-CHECKLIST-JA.md)にあります。
+
 ## 明示的な3視点ワークフロー
 
 `prepare --perspective justice|reversal|tower`を使うと、選択した視点の役割を分析パケットとケース記録へ明示できます。同じ提案に対する3つの検証済み結果は、`compare-perspectives`で11軸の決定的な構造比較へ変換できます。
@@ -93,7 +100,7 @@ Phase 3.2の決定的集約は9ケースをJustice / Reversal / Towerの3視点�
 
 AI出力は検討を補助する資料です。人間が原文、証拠、代替解釈、不足情報、影響を確認しなければなりません。法的助言ではなく、採択、拒否、執行、処罰を自動化してはいけません。
 
-安全・プライバシー資料は[`SECURITY.md`](SECURITY.md)、[`docs/phase1/PRIVACY-MODEL-JA.md`](docs/phase1/PRIVACY-MODEL-JA.md)、[`docs/phase1/SAFETY-AND-LIMITS-JA.md`](docs/phase1/SAFETY-AND-LIMITS-JA.md)にあります。
+安全・プライバシー資料は[`SECURITY.md`](SECURITY.md)、[`docs/PUBLICATION-CHECKLIST-JA.md`](docs/PUBLICATION-CHECKLIST-JA.md)、[`docs/phase1/PRIVACY-MODEL-JA.md`](docs/phase1/PRIVACY-MODEL-JA.md)、[`docs/phase1/SAFETY-AND-LIMITS-JA.md`](docs/phase1/SAFETY-AND-LIMITS-JA.md)にあります。
 
 ## ライセンス
 

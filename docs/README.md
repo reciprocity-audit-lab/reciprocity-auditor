@@ -12,3 +12,7 @@ The `phase1` directory contains the unchanged public-facing design materials nee
 
 Internal operator instructions, historical research notes, personal references, and materials unnecessary for local reproduction are intentionally excluded from this release candidate.
 
+Additional release documentation:
+
+- [`WINDOWS-POWERSHELL-GUIDE-JA.md`](WINDOWS-POWERSHELL-GUIDE-JA.md) — beginner-oriented extraction, discovery, execution, verification, and troubleshooting steps.
+- [`PUBLICATION-CHECKLIST-JA.md`](PUBLICATION-CHECKLIST-JA.md) — human privacy and content review required before publishing an exported case.

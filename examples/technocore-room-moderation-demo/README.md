@@ -36,9 +36,12 @@ From the Reciprocity Auditor repository root in Windows PowerShell:
 Copy-Item '.\examples\technocore-room-moderation-demo\analysis.json' '.\work\technocore-room-moderation-demo\analysis.json'
 .\Run-ReciprocityAuditor.ps1 validate --input '.\work\technocore-room-moderation-demo\analysis.json'
 .\Run-ReciprocityAuditor.ps1 render --input '.\work\technocore-room-moderation-demo\analysis.json'
+.\Run-ReciprocityAuditor.ps1 review --case '.\work\technocore-room-moderation-demo' --state reviewed --reviewer-label 'example-reviewer'
+.\Run-ReciprocityAuditor.ps1 status --case '.\work\technocore-room-moderation-demo'
+.\Run-ReciprocityAuditor.ps1 export-public --case '.\work\technocore-room-moderation-demo' --output '.\public\technocore-room-moderation-demo' --zip '.\public\technocore-room-moderation-demo.zip'
 ```
 
-A fresh render creates a runtime timestamp and begins in `draft` review state. Human review must be recorded separately with the `review` command.
+A fresh render creates a runtime timestamp and begins in `draft` review state. Read the new report before running `review`; the included human-review note documents the published example and does not automatically review a fresh local render. Before publishing the new export, follow [`../../docs/PUBLICATION-CHECKLIST-JA.md`](../../docs/PUBLICATION-CHECKLIST-JA.md).
 
 ## Validation and review
 
