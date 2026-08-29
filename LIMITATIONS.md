@@ -17,6 +17,7 @@ This release candidate supports structured inquiry; it does not establish truth,
 - No API, web service, server, browser automation, Git integration, Technocore integration, DID operation, wallet connection, or external posting is included.
 - The schema and deterministic validation can reject malformed or prohibited output patterns, but cannot guarantee semantic correctness or completeness.
 - Secret and identity pattern checks are defensive filters, not comprehensive data-loss-prevention controls.
+- The PowerShell verification and three-perspective demo use fixed fixtures. They demonstrate reproducible mechanics, not semantic audit accuracy or independent reasoning.
 
 ## Anonymity limits
 
@@ -41,3 +42,7 @@ The four additional evaluation scenarios cover missing information, justified as
 Phase 3.3 was an operator semantic comparison, not an independent human evaluation. The evidence does not establish that the same model and reasoning settings were used, and it does not establish independent heterogeneous-model evaluation. The 27/27 PASS result is bounded to the recorded evaluation units and does not mean 100% general performance, 100% audit accuracy, proof of complete fairness, or reliable judgment for every contract.
 
 See [`evaluation/README.md`](evaluation/README.md) for the included records.
+
+## Reproducibility limits
+
+[`Verify-LocalWorkflow.ps1`](Verify-LocalWorkflow.ps1) verifies the local state transition with a fixed fixture. The three-perspective demo deliberately supplies the same structured analysis to all three roles and therefore cannot measure whether Justice, Reversal, and Tower produce meaningfully distinct or independently generated findings. Reproduction of files and hashes establishes procedural consistency only.

@@ -56,6 +56,13 @@ Representative files:
 
 For a Japanese walkthrough, see [`QUICKSTART-JA.md`](QUICKSTART-JA.md).
 
+## Worked examples and reproducibility
+
+- [`examples/technocore-room-moderation-demo/`](examples/technocore-room-moderation-demo/) is a complete, human-reviewed audit of a fictional room-moderation proposal. It is not an official Technocore rule or interpretation.
+- [`examples/three-perspective-demo/README-JA.md`](examples/three-perspective-demo/README-JA.md) reproduces the Justice, Reversal, and Tower preparation, validation, and deterministic comparison mechanics with fixed fixtures. Identical fixture analyses are used deliberately, so the demo does not establish semantic independence or audit accuracy.
+
+Windows users can run [`Verify-LocalWorkflow.ps1`](Verify-LocalWorkflow.ps1) to reproduce `prepare → validate → render → review → status` in a temporary directory. A beginner-oriented guide is available in Japanese at [`docs/WINDOWS-POWERSHELL-GUIDE-JA.md`](docs/WINDOWS-POWERSHELL-GUIDE-JA.md). Before publishing any generated case, follow [`docs/PUBLICATION-CHECKLIST-JA.md`](docs/PUBLICATION-CHECKLIST-JA.md).
+
 ## Explicit three-perspective workflow
 
 `prepare --perspective justice|reversal|tower` records the selected role in both the analysis packet and the local case metadata. Three validated results for the same proposal can then be passed to `compare-perspectives`, which performs a deterministic structural comparison across 11 axes.
@@ -93,7 +100,7 @@ See [`evaluation/README.md`](evaluation/README.md) and [`LIMITATIONS.md`](LIMITA
 
 AI output is an aid for inquiry. A human must inspect the source text, evidence, alternative interpretations, missing information, and potential consequences. The tool provides no legal advice and must not automate adoption, rejection, enforcement, or punishment.
 
-Security and privacy guidance is in [`SECURITY.md`](SECURITY.md), [`docs/phase1/PRIVACY-MODEL-JA.md`](docs/phase1/PRIVACY-MODEL-JA.md), and [`docs/phase1/SAFETY-AND-LIMITS-JA.md`](docs/phase1/SAFETY-AND-LIMITS-JA.md).
+Security and privacy guidance is in [`SECURITY.md`](SECURITY.md), [`docs/PUBLICATION-CHECKLIST-JA.md`](docs/PUBLICATION-CHECKLIST-JA.md), [`docs/phase1/PRIVACY-MODEL-JA.md`](docs/phase1/PRIVACY-MODEL-JA.md), and [`docs/phase1/SAFETY-AND-LIMITS-JA.md`](docs/phase1/SAFETY-AND-LIMITS-JA.md).
 
 ## License
 

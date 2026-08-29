@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import ast
 import contextlib
 import hashlib
 import io
 import json
 import re
 import shutil
+import sys
 import tempfile
 import unittest
 import zipfile
@@ -120,6 +122,28 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
             self.assertEqual(expected, actual, relative)
             entries.append(relative)
         self.assertEqual(7, len(entries))
+
+    def test_root_sha256_manifest_matches_current_public_tree(self) -> None:
+        manifest = PROJECT_ROOT / "SHA256SUMS.txt"
+        recorded: set[str] = set()
+        for line in manifest.read_text(encoding="utf-8").splitlines():
+            expected, relative = line.split("  ", 1)
+            path = PROJECT_ROOT / relative
+            self.assertTrue(path.is_file(), relative)
+            self.assertNotIn("__pycache__", path.parts)
+            self.assertNotEqual(".pyc", path.suffix.lower())
+            self.assertEqual(expected, hashlib.sha256(path.read_bytes()).hexdigest(), relative)
+            recorded.add(relative)
+
+        current = {
+            path.relative_to(PROJECT_ROOT).as_posix()
+            for path in PROJECT_ROOT.rglob("*")
+            if path.is_file()
+            and path != manifest
+            and "__pycache__" not in path.parts
+            and path.suffix.lower() != ".pyc"
+        }
+        self.assertEqual(current, recorded)
 
     def test_release_evaluation_metadata_is_preserved(self) -> None:
         metrics = json.loads(
@@ -1043,6 +1067,116 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
                 main(["comparison-review-status", "--comparison", str(comparison.output_dir)]),
             )
         self.assertIn("independent_reviewed_count: 1", stdout.getvalue())
+
+    def test_public_worked_example_is_complete_and_reproducible(self) -> None:
+        example = PROJECT_ROOT / "examples" / "technocore-room-moderation-demo"
+        required = {
+            "README.md",
+            "proposal.txt",
+            "analysis-packet.md",
+            "analysis.json",
+            "audit-report-ja.md",
+            "HUMAN-REVIEW-NOTE-JA.md",
+            "PUBLICATION-MANIFEST.json",
+            "SHA256SUMS.txt",
+        }
+        self.assertEqual(required, {path.name for path in example.iterdir() if path.is_file()})
+        for line in (example / "SHA256SUMS.txt").read_text(encoding="utf-8").splitlines():
+            expected, relative = line.split("  ", 1)
+            self.assertEqual(expected, hashlib.sha256((example / relative).read_bytes()).hexdigest())
+
+        case_dir = self.temp_root / "technocore-room-moderation-demo"
+        prepare_case(
+            example / "proposal.txt",
+            case_dir,
+            requested_case_id="technocore-room-moderation-demo",
+        )
+        shutil.copyfile(example / "analysis.json", case_dir / "analysis.json")
+        result = validate_analysis(case_dir / "analysis.json")
+        self.assertTrue(result.valid)
+        manifest = json.loads((example / "PUBLICATION-MANIFEST.json").read_text(encoding="utf-8"))
+        self.assertEqual("reviewed", manifest["human_review"]["status"])
+        self.assertFalse(manifest["human_review"]["proposal_approved"])
+        self.assertEqual("not_demonstrated", manifest["generation_record"]["configuration_comparability"])
+
+    def test_three_perspective_worked_demo_matches_expected_summary(self) -> None:
+        example = PROJECT_ROOT / "examples" / "three-perspective-demo"
+        expected = json.loads((example / "EXPECTED-SUMMARY.json").read_text(encoding="utf-8"))
+        cases: dict[str, Path] = {}
+        for perspective in ("justice", "reversal", "tower"):
+            case_id = f"three-perspective-{perspective}"
+            case_dir = self.temp_root / "three-demo" / perspective
+            prepare_case(
+                example / "proposal.txt",
+                case_dir,
+                requested_case_id=case_id,
+                perspective=perspective,
+            )
+            analysis = json.loads((FIXTURES / "analysis-valid.json").read_text(encoding="utf-8"))
+            analysis["audit_metadata"]["report_id"] = case_id
+            (case_dir / "analysis.json").write_text(
+                json.dumps(analysis, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            self.assertTrue(validate_analysis(case_dir / "analysis.json").valid)
+            cases[perspective] = case_dir
+
+        comparison = compare_perspectives(
+            justice_case=cases["justice"],
+            reversal_case=cases["reversal"],
+            tower_case=cases["tower"],
+            output_dir=self.temp_root / "three-demo-comparison",
+        )
+        self.assertEqual(expected, comparison.summary)
+        payload = json.loads(comparison.json_path.read_text(encoding="utf-8"))
+        self.assertTrue(payload["human_review_required"])
+        self.assertEqual("not_demonstrated", payload["configuration_summary"]["configuration_comparability"])
+
+    def test_windows_reproduction_material_covers_complete_flow_without_network(self) -> None:
+        scripts = [
+            PROJECT_ROOT / "Verify-LocalWorkflow.ps1",
+            PROJECT_ROOT / "examples" / "three-perspective-demo" / "Run-Demo.ps1",
+        ]
+        for script in scripts:
+            source = script.read_text(encoding="utf-8")
+            self.assertIn("$PSScriptRoot", source)
+            for forbidden in (
+                "Invoke-WebRequest",
+                "Invoke-RestMethod",
+                "Start-BitsTransfer",
+                "System.Net.WebClient",
+                "curl.exe",
+            ):
+                self.assertNotIn(forbidden, source)
+
+        verifier = scripts[0].read_text(encoding="utf-8")
+        positions = [
+            verifier.index("'prepare'"),
+            verifier.index("'validate'"),
+            verifier.index("'render'"),
+            verifier.index("'review'"),
+            verifier.index("'status'"),
+        ]
+        self.assertEqual(sorted(positions), positions)
+        self.assertIn("PUBLICATION-CHECKLIST-JA.md", (PROJECT_ROOT / "QUICKSTART-JA.md").read_text(encoding="utf-8"))
+        self.assertIn("report_exists", (PROJECT_ROOT / "docs" / "WINDOWS-POWERSHELL-GUIDE-JA.md").read_text(encoding="utf-8"))
+
+    def test_core_uses_only_standard_library_and_local_package_imports(self) -> None:
+        package_root = PROJECT_ROOT / "src" / "reciprocity_auditor"
+        third_party: set[str] = set()
+        for path in package_root.glob("*.py"):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    roots = {alias.name.split(".", 1)[0] for alias in node.names}
+                elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                    roots = {node.module.split(".", 1)[0]}
+                else:
+                    continue
+                for root in roots:
+                    if root != "reciprocity_auditor" and root not in sys.stdlib_module_names:
+                        third_party.add(root)
+        self.assertEqual(set(), third_party)
 
     def test_source_has_no_network_client_imports(self) -> None:
         source = "\n".join(
