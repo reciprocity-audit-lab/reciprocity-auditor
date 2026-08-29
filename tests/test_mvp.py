@@ -1140,6 +1140,8 @@ class ReciprocityAuditorMvpTests(unittest.TestCase):
         for script in scripts:
             source = script.read_text(encoding="utf-8")
             self.assertIn("$PSScriptRoot", source)
+            self.assertIn("[System.Text.Encoding]::UTF8", source)
+            self.assertNotRegex(source, r"Get-Content[^\r\n]+-Raw\s*\|\s*ConvertFrom-Json")
             for forbidden in (
                 "Invoke-WebRequest",
                 "Invoke-RestMethod",

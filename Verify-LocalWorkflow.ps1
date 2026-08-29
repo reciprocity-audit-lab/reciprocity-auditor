@@ -38,7 +38,8 @@ try {
     Invoke-Auditor @('review', '--case', $caseDir, '--state', 'reviewed', '--reviewer-label', 'verification-reviewer')
     Invoke-Auditor @('status', '--case', $caseDir)
 
-    $review = Get-Content -LiteralPath (Join-Path $caseDir 'review.json') -Raw | ConvertFrom-Json
+    $reviewPath = Join-Path $caseDir 'review.json'
+    $review = [System.IO.File]::ReadAllText($reviewPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
     if ($review.review_state -ne 'reviewed' -or $review.review_scope -ne 'audit_report') {
         throw 'The final review record did not reach the expected reviewed audit-report state.'
     }
@@ -53,4 +54,3 @@ finally {
         Remove-Item -LiteralPath $verificationRoot -Recurse -Force
     }
 }
-

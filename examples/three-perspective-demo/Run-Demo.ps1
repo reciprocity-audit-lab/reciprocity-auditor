@@ -41,7 +41,7 @@ foreach ($perspective in @('justice', 'reversal', 'tower')) {
     $caseDir = Join-Path $OutputRoot $perspective
     Invoke-Auditor @('prepare', '--input', $proposal, '--output', $caseDir, '--case-id', $caseId, '--perspective', $perspective)
 
-    $analysis = Get-Content -LiteralPath $fixture -Raw | ConvertFrom-Json
+    $analysis = [System.IO.File]::ReadAllText($fixture, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
     $analysis.audit_metadata.report_id = $caseId
     $json = $analysis | ConvertTo-Json -Depth 100
     [System.IO.File]::WriteAllText(
@@ -62,8 +62,9 @@ Invoke-Auditor @(
     '--output', $comparisonDir
 )
 
-$actual = Get-Content -LiteralPath (Join-Path $comparisonDir 'perspective-comparison.json') -Raw | ConvertFrom-Json
-$expected = Get-Content -LiteralPath $expectedPath -Raw | ConvertFrom-Json
+$actualPath = Join-Path $comparisonDir 'perspective-comparison.json'
+$actual = [System.IO.File]::ReadAllText($actualPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+$expected = [System.IO.File]::ReadAllText($expectedPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
 foreach ($name in @('consistent', 'complementary', 'tension', 'direct_conflict', 'cannot_compare')) {
     if ($actual.summary.$name -ne $expected.$name) {
         throw ('Unexpected comparison count for {0}: expected {1}, got {2}' -f $name, $expected.$name, $actual.summary.$name)
@@ -72,4 +73,3 @@ foreach ($name in @('consistent', 'complementary', 'tension', 'direct_conflict',
 
 Write-Host ('DEMO PASS: output written to {0}' -f $OutputRoot)
 Write-Host 'The fixed analyses are identical apart from case IDs; this demonstrates mechanics, not semantic independence or accuracy.'
-
